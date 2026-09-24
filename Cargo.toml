@@ -1,0 +1,28 @@
+[package]
+name = "tpaint"
+version = "0.1.0"
+edition = "2021"
+description = "Простой растровый редактор (аналог SayPaint) на Rust + Win32/GDI"
+license = "MIT"
+
+[dependencies]
+# Чистые rust-биндинги Win32 (без C-кода)
+windows-sys = { version = "0.60", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_LibraryLoader",
+    "Win32_Storage_FileSystem",
+    "Win32_UI_Controls",
+    "Win32_UI_Controls_Dialogs",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }
+# PNG для сохранения/открытия (чистый Rust, без C)
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

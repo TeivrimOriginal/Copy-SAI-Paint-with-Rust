@@ -1,0 +1,19 @@
+# crates.io напрямую недоступен (провайдер режет fastly), поэтому используем зеркало USTC.
+# Если сеть позволяет — просто удалите этот файл, сборка пойдёт через crates.io по умолчанию.
+[source.crates-io]
+replace-with = "ustc"
+
+[source.ustc]
+registry = "sparse+https://mirrors.ustc.edu.cn/crates.io-index/"
+
+# Таргет намеренно НЕ зафиксирован: `cargo build --release` собирает под хост
+# (x86_64-pc-windows-msvc), а сборка под MinGW делается явно:
+#   rustup target add x86_64-pc-windows-gnu
+#   cargo build --release --target x86_64-pc-windows-gnu
+# (нужен mingw-w64 в PATH). Принудительный build.target здесь ломал бы сборку
+# на Linux/macOS, где этот таргет недоступен.
+
+# Статическая линковка CRT: готовый tpaint.exe не зависит от vcruntime140.dll
+# и запускается на «голой» Windows 10/11 без установленного Visual Studio.
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "target-feature=+crt-static"]
