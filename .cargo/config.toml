@@ -1,0 +1,19 @@
+# crates.io напрямую недоступен (провайдер режет fastly), поэтому используем зеркало USTC.
+# Если сеть позволяет — просто удалите этот файл, сборка пойдёт через crates.io по умолчанию.
+[source.crates-io]
+replace-with = "ustc"
+
+[source.ustc]
+registry = "sparse+https://mirrors.ustc.edu.cn/crates.io-index/"
+
+# Крейт glfw-sys собирает GLFW из исходников через CMake, поэтому cmake.exe
+# должен быть в PATH. В Visual Studio Build Tools он лежит здесь:
+# C:\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin
+#
+# Таргет намеренно НЕ зафиксирован: `cargo build --release` собирает под хост
+# (x86_64-pc-windows-msvc). Сборка под MinGW делается явно:
+#   rustup target add x86_64-pc-windows-gnu
+#   cargo build --release --target x86_64-pc-windows-gnu
+#
+# crt-static здесь НЕ включается намеренно: Rust на MSVC всегда линкует релизный
+# CRT (/MD), и GLFW должен собираться в той же конфигурации (см. Cargo.toml).
