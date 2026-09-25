@@ -1,0 +1,45 @@
+[package]
+name = "tpaint"
+version = "0.11.0"
+edition = "2021"
+description = "Растровый редактор в духе Clip Studio: Rust + GLFW + OpenGL"
+license = "MIT"
+
+[lib]
+name = "tpaint"
+path = "src/lib.rs"
+
+# Редактор и лаунчер собираются из общей библиотеки: окно, шрифты и
+# OpenGL-рендерер у них одни и те же, интерфейс рисуется тем же кодом.
+[[bin]]
+name = "tpaint"
+path = "src/main.rs"
+
+[[bin]]
+name = "TpaintLauncher"
+path = "src/bin/launcher.rs"
+
+[dependencies]
+# Окно и контекст OpenGL
+glfw = "0.17"
+# Загрузка функций OpenGL 3.3
+gl = "0.14"
+# Растеризация шрифта и текстурный атлас глифов
+ab_glyph = "0.2"
+# PNG для сохранения и открытия (чистый Rust)
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+# cmake-rs выбирает конфигурацию CMake по профилю cargo: при opt-level=0 он
+# берёт Debug, а MSVC в Debug тянет debug-CRT (/MDd), тогда как Rust всегда
+# линкует релизный CRT (/MD) — линковка не сойдётся. Поэтому даже dev-профиль
+# оптимизируем, чтобы glfw-sys всегда собирал GLFW в Release.
+[profile.dev]
+opt-level = 1
+debug = false
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
