@@ -24,7 +24,11 @@ pub fn hsv_to_rgb(h: f32, s: f32, v: f32) -> [u8; 3] {
         4 => (t, p, v),
         _ => (v, p, q),
     };
-    [(r * 255.0).round() as u8, (g * 255.0).round() as u8, (b * 255.0).round() as u8]
+    [
+        (r * 255.0).round() as u8,
+        (g * 255.0).round() as u8,
+        (b * 255.0).round() as u8,
+    ]
 }
 
 pub fn rgb_to_hsv(r: u8, g: u8, b: u8) -> (f32, f32, f32) {
@@ -53,7 +57,9 @@ pub fn to_hex(c: [u8; 4]) -> String {
 pub fn from_hex(s: &str) -> Option<[u8; 4]> {
     let t: String = s.chars().filter(|c| c.is_ascii_hexdigit()).collect();
     match t.len() {
-        6 => u32::from_str_radix(&t, 16).ok().map(|v| [(v >> 16) as u8, (v >> 8) as u8, v as u8, 255]),
+        6 => u32::from_str_radix(&t, 16)
+            .ok()
+            .map(|v| [(v >> 16) as u8, (v >> 8) as u8, v as u8, 255]),
         8 => u32::from_str_radix(&t, 16)
             .ok()
             .map(|v| [(v >> 24) as u8, (v >> 16) as u8, (v >> 8) as u8, v as u8]),
@@ -112,7 +118,12 @@ pub fn color_picker(ui: &mut Ui, r: Rect, color: &mut [u8; 4], hex_buf: &mut Str
             let sy = (iy as f32 + 0.5) / steps as f32;
             let c = hsv_to_rgb(h, sx, 1.0 - sy);
             ui.quad(
-                [sv_r[0] + cx(ix, steps, cw), sv_r[1] + cy(iy, steps, ch), sv_r[0] + cx(ix + 1, steps, cw), sv_r[1] + cy(iy + 1, steps, ch)],
+                [
+                    sv_r[0] + cx(ix, steps, cw),
+                    sv_r[1] + cy(iy, steps, ch),
+                    sv_r[0] + cx(ix + 1, steps, cw),
+                    sv_r[1] + cy(iy + 1, steps, ch),
+                ],
                 rgba([c[0], c[1], c[2], 255]),
             );
         }
@@ -137,13 +148,21 @@ pub fn color_picker(ui: &mut Ui, r: Rect, color: &mut [u8; 4], hex_buf: &mut Str
     for i in 0..hsteps {
         let c = hsv_to_rgb(i as f32 / hsteps as f32, 1.0, 1.0);
         ui.quad(
-            [hue_r[0], hue_r[1] + cy(i, hsteps, hue_r[3] - hue_r[1]), hue_r[2], hue_r[1] + cy(i + 1, hsteps, hue_r[3] - hue_r[1])],
+            [
+                hue_r[0],
+                hue_r[1] + cy(i, hsteps, hue_r[3] - hue_r[1]),
+                hue_r[2],
+                hue_r[1] + cy(i + 1, hsteps, hue_r[3] - hue_r[1]),
+            ],
             rgba([c[0], c[1], c[2], 255]),
         );
     }
     ui.frame(hue_r, theme::BORDER, 1.0);
     let hy = hue_r[1] + h * (hue_r[3] - hue_r[1]);
-    ui.quad([hue_r[0] - 1.0, hy - 1.5, hue_r[2] + 1.0, hy + 1.5], [1.0, 1.0, 1.0, 0.9]);
+    ui.quad(
+        [hue_r[0] - 1.0, hy - 1.5, hue_r[2] + 1.0, hy + 1.5],
+        [1.0, 1.0, 1.0, 0.9],
+    );
     if let Some((_, ny)) = ui.drag_with(ID_HUE, hue_r) {
         let c = hsv_to_rgb(ny, s.max(0.0001), v.max(0.0001));
         color[0] = c[0];
@@ -159,13 +178,21 @@ pub fn color_picker(ui: &mut Ui, r: Rect, color: &mut [u8; 4], hex_buf: &mut Str
     for i in 0..asteps {
         let al = (i as f32 + 0.5) / asteps as f32;
         ui.quad(
-            [a_r[0], a_r[1] + cy(i, asteps, a_r[3] - a_r[1]), a_r[2], a_r[1] + cy(i + 1, asteps, a_r[3] - a_r[1])],
+            [
+                a_r[0],
+                a_r[1] + cy(i, asteps, a_r[3] - a_r[1]),
+                a_r[2],
+                a_r[1] + cy(i + 1, asteps, a_r[3] - a_r[1]),
+            ],
             rgba([color[0], color[1], color[2], (al * 255.0) as u8]),
         );
     }
     ui.frame(a_r, theme::BORDER, 1.0);
     let ay = a_r[1] + a * (a_r[3] - a_r[1]);
-    ui.quad([a_r[0] - 1.0, ay - 1.5, a_r[2] + 1.0, ay + 1.5], [1.0, 1.0, 1.0, 0.9]);
+    ui.quad(
+        [a_r[0] - 1.0, ay - 1.5, a_r[2] + 1.0, ay + 1.5],
+        [1.0, 1.0, 1.0, 0.9],
+    );
     if let Some((_, ny)) = ui.drag_with(ID_ALPHA, a_r) {
         color[3] = (ny * 255.0).round() as u8;
         changed = true;
@@ -180,7 +207,11 @@ pub fn color_picker(ui: &mut Ui, r: Rect, color: &mut [u8; 4], hex_buf: &mut Str
         let px = r[0] + (i % 10) as f32 * (cell + 2.0);
         let py = pal_y + (i / 10) as f32 * (cell + 2.0);
         let sw = [px, py, px + cell, py + cell];
-        if ui.list_row(sw, false, ui.mouse.0 >= sw[0] && ui.mouse.0 < sw[2] && ui.mouse.1 >= sw[1] && ui.mouse.1 < sw[3]) {
+        if ui.list_row(
+            sw,
+            false,
+            ui.mouse.0 >= sw[0] && ui.mouse.0 < sw[2] && ui.mouse.1 >= sw[1] && ui.mouse.1 < sw[3],
+        ) {
             *color = *c;
             changed = true;
         }
@@ -197,7 +228,12 @@ pub fn color_picker(ui: &mut Ui, r: Rect, color: &mut [u8; 4], hex_buf: &mut Str
         .iter()
         .enumerate()
     {
-        let fr = [r[0] + i as f32 * (fw + 4.0), fy, r[0] + i as f32 * (fw + 4.0) + fw, fy + fh];
+        let fr = [
+            r[0] + i as f32 * (fw + 4.0),
+            fy,
+            r[0] + i as f32 * (fw + 4.0) + fw,
+            fy + fh,
+        ];
         let mut v = *val as f32;
         if ui.value_field(fr, lbl, &mut v, 0.0, 255.0, 0.5) {
             color[i] = v.round() as u8;

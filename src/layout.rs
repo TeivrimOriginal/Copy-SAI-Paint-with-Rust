@@ -95,125 +95,140 @@ pub enum Action {
 }
 
 const MENUS: &[(&str, &[(&str, Action)])] = &[
-    ("Файл", &[
-        ("Новый", Action::New),
-        ("", Action::Open),
-        ("Открыть проект…\tCtrl+O", Action::Open),
-        ("Импорт изображения…\tCtrl+Shift+O", Action::ImportImage),
-        ("Открыть PSD…", Action::OpenPsd),
-        ("", Action::Save),
-        ("Сохранить\tCtrl+S", Action::Save),
-        ("Сохранить как…\tCtrl+Shift+S", Action::SaveAs),
-        ("", Action::ExportPng),
-        ("Экспорт в PNG…", Action::ExportPng),
-        ("Экспорт в PNG (прозрачный)…", Action::ExportPngAlpha),
-        ("Экспорт в JPEG…", Action::ExportJpeg),
-        ("Экспорт в PSD…", Action::ExportPsd),
-        ("", Action::Quit),
-        ("Выход", Action::Quit),
-    ]),
-    ("Правка", &[
-        ("Отменить", Action::Undo),
-        ("Повторить", Action::Redo),
-        ("", Action::SelectAll),
-        ("Выделить всё\tCtrl+A", Action::SelectAll),
-        ("Инвертировать выделение", Action::InvertSel),
-        ("", Action::FeatherSel),
-        ("Растушевать выделение…", Action::FeatherSel),
-        ("Расширить выделение", Action::GrowSel),
-        ("Сузить выделение", Action::ShrinkSel),
-        ("Снять выделение\tEsc", Action::Deselect),
-        ("", Action::Copy),
-        ("Копировать\tCtrl+C", Action::Copy),
-        ("Вырезать\tCtrl+X", Action::Cut),
-        ("Вставить\tCtrl+V", Action::Paste),
-        ("Удалить\tDel", Action::DeleteSel),
-        ("", Action::FreeTransform),
-        ("Свободная трансформация\tCtrl+T", Action::FreeTransform),
-        ("", Action::ClearLayer),
-        ("Очистить слой", Action::ClearLayer),
-    ]),
-    ("Фильтры", &[
-        ("Коррекция слоя…", Action::OpenFilters),
-        ("Кривые…", Action::OpenCurves),
-        ("Уровни…", Action::OpenLevels),
-        ("Тон и насыщенность…", Action::OpenHsv),
-        ("Цветовой баланс…", Action::OpenBalance),
-        ("", Action::FlipLayerH),
-        ("Отразить слева направо", Action::FlipLayerH),
-        ("Отразить сверху вниз", Action::FlipLayerV),
-    ]),
-    ("Вид", &[
-        ("Вписать", Action::Fit),
-        ("100 %", Action::Zoom100),
-        ("", Action::ToggleGrid),
-        ("Сетка", Action::ToggleGrid),
-        ("Шаг сетки: 16", Action::GridSize(16)),
-        ("Шаг сетки: 32", Action::GridSize(32)),
-        ("Шаг сетки: 64", Action::GridSize(64)),
-        ("Шаг сетки: 128", Action::GridSize(128)),
-        ("", Action::ToggleRulers),
-        ("Линейки", Action::ToggleRulers),
-        ("", Action::ToggleNav),
-        ("Навигатор", Action::ToggleNav),
-        ("", Action::CenterGuides),
-        ("Направляющие по центру", Action::CenterGuides),
-        ("Убрать направляющие", Action::ClearGuides),
-        ("", Action::SnapGuides),
-        ("Привязка к направляющим", Action::SnapGuides),
-        ("Привязка к сетке", Action::SnapGrid),
-        ("Шаг угла 15°", Action::SnapAngle),
-        ("", Action::CanvasSizeDialog),
-        ("Размер холста…", Action::CanvasSizeDialog),
-        ("Холст 1920×1080", Action::CanvasSize(1920, 1080)),
-        ("Холст 1280×800", Action::CanvasSize(1280, 800)),
-        ("Холст 1024×1024", Action::CanvasSize(1024, 1024)),
-        ("", Action::TrimCanvas),
-        ("Обрезать пустые поля", Action::TrimCanvas),
-        ("", Action::CropToSelection),
-        ("Обрезать по выделению", Action::CropToSelection),
-        ("", Action::Rotate90),
-        ("Повернуть холст на 90°", Action::Rotate90),
-        ("Повернуть холст на 180°", Action::Rotate180),
-        ("Повернуть холст на 270°", Action::Rotate270),
-        ("", Action::MirrorCanvasH),
-        ("Отразить холст слева направо", Action::MirrorCanvasH),
-        ("Отразить холст сверху вниз", Action::MirrorCanvasV),
-    ]),
-    ("Слой", &[
-        ("Новый слой", Action::AddLayer),
-        ("Дублировать", Action::DupLayer),
-        ("Удалить", Action::DelLayer),
-        ("", Action::MergeDown),
-        ("Объединить вниз", Action::MergeDown),
-        ("Выше", Action::LayerUp),
-        ("Ниже", Action::LayerDown),
-        ("", Action::ClipLayer),
-        ("Прижать к нижнему слою", Action::ClipLayer),
-        ("", Action::OpenFx),
-        ("Эффекты слоя…", Action::OpenFx),
-        ("", Action::Shadow),
-        ("Тень", Action::Shadow),
-        ("Обводка", Action::OutlineFx),
-        ("Свечение", Action::GlowFx),
-        ("", Action::LayerTag),
-        ("Метка цвета", Action::LayerTag),
-        ("", Action::AddMask),
-        ("Маска из выделения", Action::AddMask),
-        ("", Action::MaskWhite),
-        ("Маска: залить белым", Action::MaskWhite),
-        ("Маска: залить чёрным", Action::MaskBlack),
-        ("Инвертировать маску", Action::InvertMask),
-        ("Включить/выключить маску", Action::ToggleMask),
-        ("Редактировать маску", Action::EditMask),
-        ("Удалить маску", Action::DeleteMask),
-        ("", Action::MakeGroup),
-        ("Убрать в папку", Action::MakeGroup),
-        ("Распустить папку", Action::Ungroup),
-        ("", Action::FlipLayerH),
-        ("Отразить слева направо", Action::FlipLayerH),
-        ("Отразить сверху вниз", Action::FlipLayerV),
-    ]),
+    (
+        "Файл",
+        &[
+            ("Новый", Action::New),
+            ("", Action::Open),
+            ("Открыть проект…\tCtrl+O", Action::Open),
+            ("Импорт изображения…\tCtrl+Shift+O", Action::ImportImage),
+            ("Открыть PSD…", Action::OpenPsd),
+            ("", Action::Save),
+            ("Сохранить\tCtrl+S", Action::Save),
+            ("Сохранить как…\tCtrl+Shift+S", Action::SaveAs),
+            ("", Action::ExportPng),
+            ("Экспорт в PNG…", Action::ExportPng),
+            ("Экспорт в PNG (прозрачный)…", Action::ExportPngAlpha),
+            ("Экспорт в JPEG…", Action::ExportJpeg),
+            ("Экспорт в PSD…", Action::ExportPsd),
+            ("", Action::Quit),
+            ("Выход", Action::Quit),
+        ],
+    ),
+    (
+        "Правка",
+        &[
+            ("Отменить", Action::Undo),
+            ("Повторить", Action::Redo),
+            ("", Action::SelectAll),
+            ("Выделить всё\tCtrl+A", Action::SelectAll),
+            ("Инвертировать выделение", Action::InvertSel),
+            ("", Action::FeatherSel),
+            ("Растушевать выделение…", Action::FeatherSel),
+            ("Расширить выделение", Action::GrowSel),
+            ("Сузить выделение", Action::ShrinkSel),
+            ("Снять выделение\tEsc", Action::Deselect),
+            ("", Action::Copy),
+            ("Копировать\tCtrl+C", Action::Copy),
+            ("Вырезать\tCtrl+X", Action::Cut),
+            ("Вставить\tCtrl+V", Action::Paste),
+            ("Удалить\tDel", Action::DeleteSel),
+            ("", Action::FreeTransform),
+            ("Свободная трансформация\tCtrl+T", Action::FreeTransform),
+            ("", Action::ClearLayer),
+            ("Очистить слой", Action::ClearLayer),
+        ],
+    ),
+    (
+        "Фильтры",
+        &[
+            ("Коррекция слоя…", Action::OpenFilters),
+            ("Кривые…", Action::OpenCurves),
+            ("Уровни…", Action::OpenLevels),
+            ("Тон и насыщенность…", Action::OpenHsv),
+            ("Цветовой баланс…", Action::OpenBalance),
+            ("", Action::FlipLayerH),
+            ("Отразить слева направо", Action::FlipLayerH),
+            ("Отразить сверху вниз", Action::FlipLayerV),
+        ],
+    ),
+    (
+        "Вид",
+        &[
+            ("Вписать", Action::Fit),
+            ("100 %", Action::Zoom100),
+            ("", Action::ToggleGrid),
+            ("Сетка", Action::ToggleGrid),
+            ("Шаг сетки: 16", Action::GridSize(16)),
+            ("Шаг сетки: 32", Action::GridSize(32)),
+            ("Шаг сетки: 64", Action::GridSize(64)),
+            ("Шаг сетки: 128", Action::GridSize(128)),
+            ("", Action::ToggleRulers),
+            ("Линейки", Action::ToggleRulers),
+            ("", Action::ToggleNav),
+            ("Навигатор", Action::ToggleNav),
+            ("", Action::CenterGuides),
+            ("Направляющие по центру", Action::CenterGuides),
+            ("Убрать направляющие", Action::ClearGuides),
+            ("", Action::SnapGuides),
+            ("Привязка к направляющим", Action::SnapGuides),
+            ("Привязка к сетке", Action::SnapGrid),
+            ("Шаг угла 15°", Action::SnapAngle),
+            ("", Action::CanvasSizeDialog),
+            ("Размер холста…", Action::CanvasSizeDialog),
+            ("Холст 1920×1080", Action::CanvasSize(1920, 1080)),
+            ("Холст 1280×800", Action::CanvasSize(1280, 800)),
+            ("Холст 1024×1024", Action::CanvasSize(1024, 1024)),
+            ("", Action::TrimCanvas),
+            ("Обрезать пустые поля", Action::TrimCanvas),
+            ("", Action::CropToSelection),
+            ("Обрезать по выделению", Action::CropToSelection),
+            ("", Action::Rotate90),
+            ("Повернуть холст на 90°", Action::Rotate90),
+            ("Повернуть холст на 180°", Action::Rotate180),
+            ("Повернуть холст на 270°", Action::Rotate270),
+            ("", Action::MirrorCanvasH),
+            ("Отразить холст слева направо", Action::MirrorCanvasH),
+            ("Отразить холст сверху вниз", Action::MirrorCanvasV),
+        ],
+    ),
+    (
+        "Слой",
+        &[
+            ("Новый слой", Action::AddLayer),
+            ("Дублировать", Action::DupLayer),
+            ("Удалить", Action::DelLayer),
+            ("", Action::MergeDown),
+            ("Объединить вниз", Action::MergeDown),
+            ("Выше", Action::LayerUp),
+            ("Ниже", Action::LayerDown),
+            ("", Action::ClipLayer),
+            ("Прижать к нижнему слою", Action::ClipLayer),
+            ("", Action::OpenFx),
+            ("Эффекты слоя…", Action::OpenFx),
+            ("", Action::Shadow),
+            ("Тень", Action::Shadow),
+            ("Обводка", Action::OutlineFx),
+            ("Свечение", Action::GlowFx),
+            ("", Action::LayerTag),
+            ("Метка цвета", Action::LayerTag),
+            ("", Action::AddMask),
+            ("Маска из выделения", Action::AddMask),
+            ("", Action::MaskWhite),
+            ("Маска: залить белым", Action::MaskWhite),
+            ("Маска: залить чёрным", Action::MaskBlack),
+            ("Инвертировать маску", Action::InvertMask),
+            ("Включить/выключить маску", Action::ToggleMask),
+            ("Редактировать маску", Action::EditMask),
+            ("Удалить маску", Action::DeleteMask),
+            ("", Action::MakeGroup),
+            ("Убрать в папку", Action::MakeGroup),
+            ("Распустить папку", Action::Ungroup),
+            ("", Action::FlipLayerH),
+            ("Отразить слева направо", Action::FlipLayerH),
+            ("Отразить сверху вниз", Action::FlipLayerV),
+        ],
+    ),
 ];
 
 pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Action>) {
@@ -286,20 +301,38 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
         }
         // Ручки-квадратики по углам
         for (i, p) in sp.iter().enumerate() {
-            ui.quad([p.0 - 4.0, p.1 - 4.0, p.0 + 4.0, p.1 + 4.0], [1.0, 1.0, 1.0, 1.0]);
-            ui.frame([p.0 - 4.0, p.1 - 4.0, p.0 + 4.0, p.1 + 4.0], [0.2, 0.5, 0.9, 1.0], 1.0);
+            ui.quad(
+                [p.0 - 4.0, p.1 - 4.0, p.0 + 4.0, p.1 + 4.0],
+                [1.0, 1.0, 1.0, 1.0],
+            );
+            ui.frame(
+                [p.0 - 4.0, p.1 - 4.0, p.0 + 4.0, p.1 + 4.0],
+                [0.2, 0.5, 0.9, 1.0],
+                1.0,
+            );
             let _ = i;
         }
         // Ручка поворота сверху
         let top = ((sp[0].0 + sp[1].0) / 2.0, (sp[0].1 + sp[1].1) / 2.0);
         let up = (top.0, top.1 - 26.0);
         ui.line(top.0, top.1, up.0, up.1, [0.35, 0.75, 1.0, 0.95], 1.5);
-        ui.quad([up.0 - 5.0, up.1 - 5.0, up.0 + 5.0, up.1 + 5.0], [1.0, 1.0, 1.0, 1.0]);
-        ui.frame([up.0 - 5.0, up.1 - 5.0, up.0 + 5.0, up.1 + 5.0], [0.2, 0.5, 0.9, 1.0], 1.0);
+        ui.quad(
+            [up.0 - 5.0, up.1 - 5.0, up.0 + 5.0, up.1 + 5.0],
+            [1.0, 1.0, 1.0, 1.0],
+        );
+        ui.frame(
+            [up.0 - 5.0, up.1 - 5.0, up.0 + 5.0, up.1 + 5.0],
+            [0.2, 0.5, 0.9, 1.0],
+            1.0,
+        );
         // Подсказка с текущими размером и углом
-        let cur_w = (((t.pts[1].0 - t.pts[0].0).powi(2) + (t.pts[1].1 - t.pts[0].1).powi(2)).sqrt()).round() as i32;
-        let cur_h = (((t.pts[3].0 - t.pts[0].0).powi(2) + (t.pts[3].1 - t.pts[0].1).powi(2)).sqrt()).round() as i32;
-        let ang = (t.pts[1].1 - t.pts[0].1).atan2(t.pts[1].0 - t.pts[0].0).to_degrees();
+        let cur_w = (((t.pts[1].0 - t.pts[0].0).powi(2) + (t.pts[1].1 - t.pts[0].1).powi(2)).sqrt())
+            .round() as i32;
+        let cur_h = (((t.pts[3].0 - t.pts[0].0).powi(2) + (t.pts[3].1 - t.pts[0].1).powi(2)).sqrt())
+            .round() as i32;
+        let ang = (t.pts[1].1 - t.pts[0].1)
+            .atan2(t.pts[1].0 - t.pts[0].0)
+            .to_degrees();
         let txt = format!("{}×{}  {:.1}°", cur_w.max(1), cur_h.max(1), ang);
         let tw = ui.text_width(&txt, FONT_SMALL, false) + 14.0;
         ui.quad([x0, y1 + 8.0, x0 + tw, y1 + 28.0], [0.0, 0.0, 0.0, 0.8]);
@@ -358,13 +391,26 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
         let col = [0.35, 0.75, 1.0, 0.95];
         for i in 0..app.poly.len() {
             let a = app.canvas_to_screen(app.poly[i].0, app.poly[i].1);
-            let b = app.canvas_to_screen(app.poly[(i + 1) % app.poly.len()].0, app.poly[(i + 1) % app.poly.len()].1);
+            let b = app.canvas_to_screen(
+                app.poly[(i + 1) % app.poly.len()].0,
+                app.poly[(i + 1) % app.poly.len()].1,
+            );
             ui.line(a.0, a.1, b.0, b.1, col, 1.5);
         }
         // Нить от последней вершины к курсору — видно, где будет ребро.
         if app.tool.is_polygon() && app.cursor_in_canvas {
-            let last = app.canvas_to_screen(app.poly[app.poly.len() - 1].0, app.poly[app.poly.len() - 1].1);
-            ui.line(last.0, last.1, app.cursor_screen.0, app.cursor_screen.1, [0.8, 0.85, 0.9, 0.6], 1.0);
+            let last = app.canvas_to_screen(
+                app.poly[app.poly.len() - 1].0,
+                app.poly[app.poly.len() - 1].1,
+            );
+            ui.line(
+                last.0,
+                last.1,
+                app.cursor_screen.0,
+                app.cursor_screen.1,
+                [0.8, 0.85, 0.9, 0.6],
+                1.0,
+            );
         }
         for (i, p) in app.poly.iter().enumerate() {
             let s = app.canvas_to_screen(p.0, p.1);
@@ -372,7 +418,11 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
             let r = if first { 5.0 } else { 4.0 };
             // У первой вершины рамка толще: по ней контур замыкается.
             ui.quad([s.0 - r, s.1 - r, s.0 + r, s.1 + r], [0.1, 0.1, 0.12, 1.0]);
-            ui.frame([s.0 - r, s.1 - r, s.0 + r, s.1 + r], col, if first { 2.0 } else { 1.0 });
+            ui.frame(
+                [s.0 - r, s.1 - r, s.0 + r, s.1 + r],
+                col,
+                if first { 2.0 } else { 1.0 },
+            );
         }
     }
     // Навигатор: маленькая копия холста с рамкой текущего вида.
@@ -380,7 +430,11 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
         navigator(ui, app, cr);
     }
     // Рамка вокруг документа — тонкая, чтобы не затенять сам холст.
-    ui.frame([cr[0] - 1.0, cr[1] - 1.0, cr[2] + 1.0, cr[3] + 1.0], [0.0, 0.0, 0.0, 0.6], 1.0);
+    ui.frame(
+        [cr[0] - 1.0, cr[1] - 1.0, cr[2] + 1.0, cr[3] + 1.0],
+        [0.0, 0.0, 0.0, 0.6],
+        1.0,
+    );
 
     // Поле ввода текста: рисуем ровно то, что потом ляжет в слой.
     if app.text.is_some() {
@@ -401,7 +455,12 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
         let bold = app.params.bold_text;
         let p = app.canvas_to_screen(t.x, t.y);
         let c = app.color();
-        let col = [c[0] as f32 / 255.0, c[1] as f32 / 255.0, c[2] as f32 / 255.0, c[3] as f32 / 255.0];
+        let col = [
+            c[0] as f32 / 255.0,
+            c[1] as f32 / 255.0,
+            c[2] as f32 / 255.0,
+            c[3] as f32 / 255.0,
+        ];
         if app.params.vertical_text {
             // Столбик: буквы идут сверху вниз, каждая по центру колонки.
             let step = ui.vertical_step(size, bold);
@@ -410,7 +469,12 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
                 tw = tw.max(ui.text_width(&ch.to_string(), size, bold));
             }
             let n = t.buf.chars().count().max(1) as f32;
-            let box_r = [p.0 - tw / 2.0 - 6.0, p.1 - 2.0, p.0 + tw / 2.0 + 6.0, p.1 + step * n + 4.0];
+            let box_r = [
+                p.0 - tw / 2.0 - 6.0,
+                p.1 - 2.0,
+                p.0 + tw / 2.0 + 6.0,
+                p.1 + step * n + 4.0,
+            ];
             ui.quad(box_r, [0.0, 0.0, 0.0, 0.45]);
             ui.frame(box_r, theme::ACCENT, 1.0);
             for (i, ch) in t.buf.chars().enumerate() {
@@ -420,7 +484,15 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
                 ui.text(p.0 - cw / 2.0, base, &s, size, col, bold);
             }
             if (app.ants_phase * 2.0).fract() < 0.5 {
-                ui.quad([box_r[0] + 1.0, p.1 + step * (n - 1.0), box_r[0] + 2.5, p.1 + step * n + 2.0], col);
+                ui.quad(
+                    [
+                        box_r[0] + 1.0,
+                        p.1 + step * (n - 1.0),
+                        box_r[0] + 2.5,
+                        p.1 + step * n + 2.0,
+                    ],
+                    col,
+                );
             }
         } else {
             // Якорь — верх строки, а текст рисуется по базовой линии, как в слое.
@@ -433,7 +505,15 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
             ui.text(p.0, base, &t.buf, size, col, bold);
             // курсор мигает — используем фазу «муравьёв»
             if (app.ants_phase * 2.0).fract() < 0.5 {
-                ui.quad([p.0 + tw + 1.0, base - lh * 0.75, p.0 + tw + 2.5, base + lh * 0.1], col);
+                ui.quad(
+                    [
+                        p.0 + tw + 1.0,
+                        base - lh * 0.75,
+                        p.0 + tw + 2.5,
+                        base + lh * 0.1,
+                    ],
+                    col,
+                );
             }
         }
     }
@@ -442,7 +522,11 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
     if app.cursor_in_canvas {
         let rad = (app.params.size * 0.5 * app.zoom).max(1.0);
         let (mx, my) = app.cursor_screen;
-        let shape = if app.tool.is_freehand() { app.brush_shape() } else { crate::raster::Shape::Round };
+        let shape = if app.tool.is_freehand() {
+            app.brush_shape()
+        } else {
+            crate::raster::Shape::Round
+        };
         match shape {
             crate::raster::Shape::Round => {
                 ui.ring(mx, my, rad, [0.0, 0.0, 0.0, 0.75], 1.0);
@@ -456,9 +540,15 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
                         let a = i as f32 / n as f32 * std::f32::consts::TAU;
                         let a1 = (i + 1) as f32 / n as f32 * std::f32::consts::TAU;
                         ui.line(
-                            mx + a.cos() * rx, my + a.sin() * ry,
-                            mx + a1.cos() * rx, my + a1.sin() * ry,
-                            if i % 2 == 0 { [0.0, 0.0, 0.0, 0.75] } else { [1.0, 1.0, 1.0, 0.75] },
+                            mx + a.cos() * rx,
+                            my + a.sin() * ry,
+                            mx + a1.cos() * rx,
+                            my + a1.sin() * ry,
+                            if i % 2 == 0 {
+                                [0.0, 0.0, 0.0, 0.75]
+                            } else {
+                                [1.0, 1.0, 1.0, 0.75]
+                            },
                             1.0,
                         );
                     }
@@ -508,7 +598,14 @@ pub fn build(ui: &mut Ui, app: &mut App, w: i32, h: i32, actions: &mut Vec<Actio
         ui.quad([tx, ty, tx + tw, ty + 20.0], [0.0, 0.0, 0.0, 0.85]);
         ui.frame([tx, ty, tx + tw, ty + 20.0], theme::BORDER, 1.0);
         let lh = ui.line_height(FONT_SMALL);
-        ui.text(tx + 6.0, ty + (20.0 + lh * 0.72) / 2.0, &text, FONT_SMALL, theme::TEXT, false);
+        ui.text(
+            tx + 6.0,
+            ty + (20.0 + lh * 0.72) / 2.0,
+            &text,
+            FONT_SMALL,
+            theme::TEXT,
+            false,
+        );
     }
 
     if let Some(dlg) = &mut app.dialog {
@@ -582,9 +679,23 @@ fn hsv_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     let r = [(w - dw) / 2.0, top, (w + dw) / 2.0, top + dh];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
-    ui.text(r[0] + PAD, r[1] + 8.0, "Тон и насыщенность", FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 8.0,
+        "Тон и насыщенность",
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
     let name = app.doc.layer_name(app.doc.active);
-    ui.text(r[0] + PAD, r[1] + 26.0, &format!("Слой: {}", name), FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 26.0,
+        &format!("Слой: {}", name),
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
 
     let g = [r[0] + PAD, r[1] + 46.0, r[2] - PAD, r[1] + 140.0];
     corr_histogram(ui, app, g);
@@ -654,16 +765,40 @@ fn balance_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     let r = [(w - dw) / 2.0, top, (w + dw) / 2.0, top + dh];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
-    ui.text(r[0] + PAD, r[1] + 8.0, "Цветовой баланс", FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 8.0,
+        "Цветовой баланс",
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
     let name = app.doc.layer_name(app.doc.active);
-    ui.text(r[0] + PAD, r[1] + 26.0, &format!("Слой: {}", name), FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 26.0,
+        &format!("Слой: {}", name),
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
 
     let g = [r[0] + PAD, r[1] + 46.0, r[2] - PAD, r[1] + 126.0];
     corr_histogram(ui, app, g);
     // Полосы света подписаны прямо на гистограмме.
-    for (i, (t, cap)) in [(0.0f32, "тени"), (0.5, "середина"), (1.0, "света")].iter().enumerate() {
+    for (i, (t, cap)) in [(0.0f32, "тени"), (0.5, "середина"), (1.0, "света")]
+        .iter()
+        .enumerate()
+    {
         let _ = i;
-        ui.text(g[0] + 4.0 + t * (g[2] - g[0] - 50.0), g[1] + 4.0, cap, FONT_SMALL, theme::TEXT_DIM, false);
+        ui.text(
+            g[0] + 4.0 + t * (g[2] - g[0] - 50.0),
+            g[1] + 4.0,
+            cap,
+            FONT_SMALL,
+            theme::TEXT_DIM,
+            false,
+        );
     }
 
     let bands = ["Тени", "Средние тона", "Света"];
@@ -725,7 +860,14 @@ fn fx_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     let r = [(w - dw) / 2.0, top, (w + dw) / 2.0, top + dh];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
-    ui.text(r[0] + PAD + 4.0, r[1] + 10.0, "Эффекты слоя", FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD + 4.0,
+        r[1] + 10.0,
+        "Эффекты слоя",
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
     let name = app.doc.layer_name(app.doc.active);
     ui.text(
         r[0] + PAD + 4.0,
@@ -749,15 +891,71 @@ fn fx_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     }
     y += P;
     if on {
-        fx_num(ui, app, x0, x1, y, "Смещение X", fx.shadow_dx, FxNum::Dx, -64.0, 64.0, 0.5);
+        fx_num(
+            ui,
+            app,
+            x0,
+            x1,
+            y,
+            "Смещение X",
+            fx.shadow_dx,
+            FxNum::Dx,
+            -64.0,
+            64.0,
+            0.5,
+        );
         y += P;
-        fx_num(ui, app, x0, x1, y, "Смещение Y", fx.shadow_dy, FxNum::Dy, -64.0, 64.0, 0.5);
+        fx_num(
+            ui,
+            app,
+            x0,
+            x1,
+            y,
+            "Смещение Y",
+            fx.shadow_dy,
+            FxNum::Dy,
+            -64.0,
+            64.0,
+            0.5,
+        );
         y += P;
-        fx_num(ui, app, x0, x1, y, "Мягкость", fx.shadow_blur, FxNum::Blur, 0.0, 40.0, 0.5);
+        fx_num(
+            ui,
+            app,
+            x0,
+            x1,
+            y,
+            "Мягкость",
+            fx.shadow_blur,
+            FxNum::Blur,
+            0.0,
+            40.0,
+            0.5,
+        );
         y += P;
-        fx_num(ui, app, x0, x1, y, "Непрозрачность", fx.shadow_opacity, FxNum::Opacity, 0.0, 1.0, 0.01);
+        fx_num(
+            ui,
+            app,
+            x0,
+            x1,
+            y,
+            "Непрозрачность",
+            fx.shadow_opacity,
+            FxNum::Opacity,
+            0.0,
+            1.0,
+            0.01,
+        );
         y += P;
-        color_row(ui, app, x0, y, "Цвет тени", fx.shadow_color, FxColor::Shadow);
+        color_row(
+            ui,
+            app,
+            x0,
+            y,
+            "Цвет тени",
+            fx.shadow_color,
+            FxColor::Shadow,
+        );
         y += P;
     }
 
@@ -768,9 +966,29 @@ fn fx_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     }
     y += P;
     if on2 {
-        fx_num(ui, app, x0, x1, y, "Толщина", fx.outline_size, FxNum::Size, 1.0, 24.0, 0.5);
+        fx_num(
+            ui,
+            app,
+            x0,
+            x1,
+            y,
+            "Толщина",
+            fx.outline_size,
+            FxNum::Size,
+            1.0,
+            24.0,
+            0.5,
+        );
         y += P;
-        color_row(ui, app, x0, y, "Цвет обводки", fx.outline_color, FxColor::Outline);
+        color_row(
+            ui,
+            app,
+            x0,
+            y,
+            "Цвет обводки",
+            fx.outline_color,
+            FxColor::Outline,
+        );
         y += P;
     }
 
@@ -781,11 +999,43 @@ fn fx_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     }
     y += P;
     if on3 {
-        fx_num(ui, app, x0, x1, y, "Радиус", fx.glow_blur, FxNum::GlowBlur, 0.0, 60.0, 0.5);
+        fx_num(
+            ui,
+            app,
+            x0,
+            x1,
+            y,
+            "Радиус",
+            fx.glow_blur,
+            FxNum::GlowBlur,
+            0.0,
+            60.0,
+            0.5,
+        );
         y += P;
-        fx_num(ui, app, x0, x1, y, "Непрозрачность", fx.glow_opacity, FxNum::GlowOpacity, 0.0, 1.0, 0.01);
+        fx_num(
+            ui,
+            app,
+            x0,
+            x1,
+            y,
+            "Непрозрачность",
+            fx.glow_opacity,
+            FxNum::GlowOpacity,
+            0.0,
+            1.0,
+            0.01,
+        );
         y += P;
-        color_row(ui, app, x0, y, "Цвет свечения", fx.glow_color, FxColor::Glow);
+        color_row(
+            ui,
+            app,
+            x0,
+            y,
+            "Цвет свечения",
+            fx.glow_color,
+            FxColor::Glow,
+        );
     }
     ui.pop_clip();
 
@@ -874,7 +1124,11 @@ fn color_row(
         let sr = [x, y - 3.0, x + 17.0, y + 15.0];
         let sel = cur[..3] == c[..3];
         ui.swatch(sr, *c);
-        ui.frame(sr, if sel { theme::ACCENT } else { theme::BORDER }, if sel { 2.0 } else { 1.0 });
+        ui.frame(
+            sr,
+            if sel { theme::ACCENT } else { theme::BORDER },
+            if sel { 2.0 } else { 1.0 },
+        );
         if hover(ui, sr) && ui.pressed {
             picked = Some(*c);
         }
@@ -982,15 +1236,30 @@ fn navigator(ui: &mut Ui, app: &mut App, cr: Rect) {
     const NAV_W: f32 = 196.0;
     const HEAD: f32 = 18.0;
     let img_h = ((NAV_W - 12.0) * app.doc.height as f32 / app.doc.width as f32).clamp(60.0, 240.0);
-    let r = [cr[2] - NAV_W - 10.0, cr[1] + 10.0, cr[2] - 10.0, cr[1] + 10.0 + HEAD + img_h];
+    let r = [
+        cr[2] - NAV_W - 10.0,
+        cr[1] + 10.0,
+        cr[2] - 10.0,
+        cr[1] + 10.0 + HEAD + img_h,
+    ];
     // Подложка панели — фоном (его проход идёт раньше текстуры холста),
     // иначе сплошной квад закрыл бы миниатюру.
     ui.background(r, [0.08, 0.08, 0.09, 0.92]);
     ui.frame(r, theme::BORDER, 1.0);
-    ui.text(r[0] + 6.0, r[1] + 3.0, "Навигатор", FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + 6.0,
+        r[1] + 3.0,
+        "Навигатор",
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
     // Кнопка закрытия — как в Clip Studio.
     let cb = [r[2] - 16.0, r[1] + 2.0, r[2] - 2.0, r[1] + 16.0];
-    ui.quad([cb[0] + 5.0, cb[1] + 5.0, cb[2] - 5.0, cb[3] - 5.0], theme::TEXT_DIM);
+    ui.quad(
+        [cb[0] + 5.0, cb[1] + 5.0, cb[2] - 5.0, cb[3] - 5.0],
+        theme::TEXT_DIM,
+    );
     if hover(ui, cb) && ui.pressed {
         app.show_nav = false;
     }
@@ -1012,7 +1281,12 @@ fn navigator(ui: &mut Ui, app: &mut App, cr: Rect) {
     let vp = app.screen_to_canvas(cr[0], cr[1]);
     let vx = dx + vp.0 * k;
     let vy = dy + vp.1 * k;
-    let view = [vx.max(dx), vy.max(dy), (vx + vw).min(dx + dw), (vy + vh).min(dy + dh)];
+    let view = [
+        vx.max(dx),
+        vy.max(dy),
+        (vx + vw).min(dx + dw),
+        (vy + vh).min(dy + dh),
+    ];
     if view[2] > view[0] && view[3] > view[1] {
         ui.frame(view, theme::ACCENT, 1.0);
         // Всё, что вне рамки, приглушаем — видно, где мы находимся.
@@ -1047,8 +1321,14 @@ fn draw_snap_hint(ui: &mut Ui, app: &App, cr: Rect) {
     if !app.in_canvas(app.cursor_screen) {
         return;
     }
-    let from = if app.drawing { Some(app.stroke_start) } else { None };
-    let Some((cur, hit)) = app.snap_preview(app.cursor, from) else { return };
+    let from = if app.drawing {
+        Some(app.stroke_start)
+    } else {
+        None
+    };
+    let Some((cur, hit)) = app.snap_preview(app.cursor, from) else {
+        return;
+    };
     let col = [1.0, 0.2, 0.7, 0.9];
     match hit {
         SnapHit::GuideV(x) => {
@@ -1087,8 +1367,16 @@ fn draw_symmetry_axes(ui: &mut Ui, app: &App, _cr: Rect) {
     // Луч обрезается краями холста, иначе линии уходят в тёмное поле вокруг.
     let ray = |a: f32| {
         let (dx, dy) = (a.cos(), a.sin());
-        let tx = if dx.abs() > 0.001 { (w * 0.5) / dx.abs() } else { f32::MAX };
-        let ty = if dy.abs() > 0.001 { (h * 0.5) / dy.abs() } else { f32::MAX };
+        let tx = if dx.abs() > 0.001 {
+            (w * 0.5) / dx.abs()
+        } else {
+            f32::MAX
+        };
+        let ty = if dy.abs() > 0.001 {
+            (h * 0.5) / dy.abs()
+        } else {
+            f32::MAX
+        };
         let t = tx.min(ty);
         (c.0 + dx * t * app.zoom, c.1 + dy * t * app.zoom)
     };
@@ -1151,7 +1439,14 @@ fn draw_guides(ui: &mut Ui, app: &mut App, cr: Rect) {
             let (pos, horiz) = app.guides[i];
             let p = app.screen_to_canvas(ui.mouse.0, ui.mouse.1);
             let v = if horiz { p.1 } else { p.0 };
-            app.guides[i].0 = v.clamp(0.0, if horiz { app.doc.height as f32 } else { app.doc.width as f32 });
+            app.guides[i].0 = v.clamp(
+                0.0,
+                if horiz {
+                    app.doc.height as f32
+                } else {
+                    app.doc.width as f32
+                },
+            );
             let _ = pos;
         } else {
             app.guide_drag = None;
@@ -1159,7 +1454,11 @@ fn draw_guides(ui: &mut Ui, app: &mut App, cr: Rect) {
     }
     for (i, (pos, horiz)) in app.guides.iter().enumerate() {
         let active = app.guide_drag == Some(i);
-        let color = if active { [1.0, 0.55, 0.2, 1.0] } else { [0.3, 0.85, 1.0, 0.9] };
+        let color = if active {
+            [1.0, 0.55, 0.2, 1.0]
+        } else {
+            [0.3, 0.85, 1.0, 0.9]
+        };
         if *horiz {
             let y = app.canvas_to_screen(0.0, *pos).1;
             ui.line(cr[0], y, cr[2], y, color, 1.0);
@@ -1180,9 +1479,23 @@ fn levels_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     let r = [(w - dw) / 2.0, top, (w + dw) / 2.0, top + dh];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
-    ui.text(r[0] + PAD, r[1] + 8.0, "Уровни", FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 8.0,
+        "Уровни",
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
     let name = app.doc.layer_name(app.doc.active);
-    ui.text(r[0] + PAD, r[1] + 26.0, &format!("Слой: {}", name), FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 26.0,
+        &format!("Слой: {}", name),
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
 
     // Гистограмма с подписью входных точек.
     let g = [r[0] + PAD, r[1] + 46.0, r[2] - PAD, r[1] + 166.0];
@@ -1283,13 +1596,32 @@ fn curve_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     let r = [(w - dw) / 2.0, top, (w + dw) / 2.0, top + dh];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
-    ui.text(r[0] + PAD, r[1] + 8.0, "Кривые", FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 8.0,
+        "Кривые",
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
     let name = app.doc.layer_name(app.doc.active);
-    ui.text(r[0] + PAD, r[1] + 26.0, &format!("Слой: {}", name), FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + PAD,
+        r[1] + 26.0,
+        &format!("Слой: {}", name),
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
     // Каналы — как в Clip Studio: общий тон и три цветовых.
     let bw = (dw - PAD * 2.0 - 6.0 * 3.0) / 4.0;
     for (i, ch) in CurveChannel::ALL.iter().enumerate() {
-        let br = [r[0] + PAD + (bw + 6.0) * i as f32, r[1] + 42.0, r[0] + PAD + (bw + 6.0) * i as f32 + bw, r[1] + 62.0];
+        let br = [
+            r[0] + PAD + (bw + 6.0) * i as f32,
+            r[1] + 42.0,
+            r[0] + PAD + (bw + 6.0) * i as f32 + bw,
+            r[1] + 62.0,
+        ];
         if ui.button(br, ch.name()) {
             app.curve_channel = *ch;
             // Кривая одна на все каналы, но предпросмотр пересчитывается.
@@ -1301,7 +1633,12 @@ fn curve_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     }
 
     // Поле кривой: X — вход, Y — выход, обе оси 0..=1.
-    let g = [r[0] + PAD, r[1] + 70.0, r[0] + PAD + size, r[1] + 70.0 + size];
+    let g = [
+        r[0] + PAD,
+        r[1] + 70.0,
+        r[0] + PAD + size,
+        r[1] + 70.0 + size,
+    ];
     ui.quad(g, [0.06, 0.06, 0.07, 1.0]);
     // Сетка: четыре квадранта и диагональ «как есть».
     for i in 1..4 {
@@ -1338,7 +1675,11 @@ fn curve_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     let to_screen = |p: (f32, f32)| (g[0] + p.0 * size, g[3] - p.1 * size);
     for (i, p) in app.curve.pts.clone().iter().enumerate() {
         let (x, y) = to_screen(*p);
-        let rad = if i == 0 || i + 1 == app.curve.pts.len() { 5.0 } else { 4.5 };
+        let rad = if i == 0 || i + 1 == app.curve.pts.len() {
+            5.0
+        } else {
+            4.5
+        };
         ui.quad([x - rad, y - rad, x + rad, y + rad], [0.1, 0.1, 0.12, 1.0]);
         ui.frame([x - rad, y - rad, x + rad, y + rad], col, 1.5);
     }
@@ -1414,13 +1755,32 @@ fn filter_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     ui.quad([0.0, 0.0, w, h], [0.0, 0.0, 0.0, 0.55]);
     let dw = 380.0;
     let dh = 320.0;
-    let r = [(w - dw) / 2.0, (h - dh) / 2.0, (w + dw) / 2.0, (h + dh) / 2.0];
+    let r = [
+        (w - dw) / 2.0,
+        (h - dh) / 2.0,
+        (w + dw) / 2.0,
+        (h + dh) / 2.0,
+    ];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
     let lh = ui.line_height(FONT_UI + 2.0);
-    ui.text(r[0] + PAD + 4.0, r[1] + 10.0, "Фильтры слоя", FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD + 4.0,
+        r[1] + 10.0,
+        "Фильтры слоя",
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
     let name = app.doc.layer_name(app.doc.active);
-    ui.text(r[0] + PAD + 4.0, r[1] + 26.0, &format!("Слой: {}", name), FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + PAD + 4.0,
+        r[1] + 26.0,
+        &format!("Слой: {}", name),
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
 
     let mut y = r[1] + 44.0;
     let row = |ui: &mut Ui, y: f32, label: &str, v: &mut f32, min: f32, max: f32, step: f32| {
@@ -1439,7 +1799,14 @@ fn filter_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     y += 26.0;
     row(ui, y, "Резкость", &mut app.f_sharpen, 0.0, 1.0, 0.05);
     y += 24.0;
-    ui.text(r[0] + PAD, y, "Enter — применить, Esc — отмена", FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + PAD,
+        y,
+        "Enter — применить, Esc — отмена",
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
 
     // Клавиши работают, когда окно открыто.
     let keys: Vec<KeyEv> = std::mem::take(&mut ui.keys);
@@ -1456,7 +1823,8 @@ fn filter_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     }
     if app.filter_dialog && !had_keys && ui.pressed && hover(ui, [0.0, 0.0, w, h]) {
         // щелчок мимо окна — закрыть
-        let inside = ui.mouse.0 > r[0] && ui.mouse.0 < r[2] && ui.mouse.1 > r[1] && ui.mouse.1 < r[3];
+        let inside =
+            ui.mouse.0 > r[0] && ui.mouse.0 < r[2] && ui.mouse.1 > r[1] && ui.mouse.1 < r[3];
         if !inside {
             app.filter_dialog = false;
         }
@@ -1481,11 +1849,23 @@ pub fn size_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
     ui.quad([0.0, 0.0, w, h], [0.0, 0.0, 0.0, 0.55]);
     let dw = 340.0;
     let dh = 208.0;
-    let r = [(w - dw) / 2.0, (h - dh) / 2.0, (w + dw) / 2.0, (h + dh) / 2.0];
+    let r = [
+        (w - dw) / 2.0,
+        (h - dh) / 2.0,
+        (w + dw) / 2.0,
+        (h + dh) / 2.0,
+    ];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
     let lh = ui.line_height(FONT_UI + 2.0);
-    ui.text(r[0] + PAD + 4.0, r[1] + 10.0, "Размер холста", FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD + 4.0,
+        r[1] + 10.0,
+        "Размер холста",
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
 
     // Поля ввода получают фокус по клику; цифры набираются с клавиатуры.
     let mut y = r[1] + 40.0;
@@ -1519,9 +1899,24 @@ pub fn size_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
             }
         }
         ui.quad(fr, theme::FIELD);
-        ui.frame(fr, if focused { theme::ACCENT } else { theme::BORDER }, 1.0);
+        ui.frame(
+            fr,
+            if focused {
+                theme::ACCENT
+            } else {
+                theme::BORDER
+            },
+            1.0,
+        );
         let txt = format!("{}: {}", label, *val as i32);
-        ui.text(fr[0] + 8.0, fr[1] + (24.0 + lh * 0.72) / 2.0, &txt, FONT_SMALL, theme::TEXT, false);
+        ui.text(
+            fr[0] + 8.0,
+            fr[1] + (24.0 + lh * 0.72) / 2.0,
+            &txt,
+            FONT_SMALL,
+            theme::TEXT,
+            false,
+        );
         y += 30.0;
     }
     app.size_w = fields[0].1;
@@ -1555,7 +1950,11 @@ fn menu_bar(ui: &mut Ui, app: &App, h: f32, actions: &mut Vec<Action>) {
         let id = 700_000 + i as u32;
         let hot = hover(ui, r);
         if hot && ui.pressed {
-            ui.open_menu = if ui.open_menu == Some(id) { None } else { Some(id) };
+            ui.open_menu = if ui.open_menu == Some(id) {
+                None
+            } else {
+                Some(id)
+            };
             ui.consumed_click = true;
         }
         if hot {
@@ -1565,7 +1964,14 @@ fn menu_bar(ui: &mut Ui, app: &App, h: f32, actions: &mut Vec<Action>) {
             ui.quad(r, theme::ACCENT_DIM);
         }
         let lh = ui.line_height(FONT_UI);
-        ui.text(r[0] + 9.0, (h + lh * 0.72) / 2.0, title, FONT_UI, theme::TEXT, false);
+        ui.text(
+            r[0] + 9.0,
+            (h + lh * 0.72) / 2.0,
+            title,
+            FONT_UI,
+            theme::TEXT,
+            false,
+        );
         // выпадающее меню
         if ui.open_menu == Some(id) {
             let ih = 22.0;
@@ -1577,7 +1983,12 @@ fn menu_bar(ui: &mut Ui, app: &App, h: f32, actions: &mut Vec<Action>) {
             ui.quad(list, theme::PANEL);
             ui.frame(list, theme::BORDER, 1.0);
             for (k, (label, act)) in items.iter().enumerate() {
-                let ir = [list[0] + 1.0, list[1] + 1.0 + k as f32 * ih, list[2] - 1.0, list[1] + 1.0 + (k + 1) as f32 * ih];
+                let ir = [
+                    list[0] + 1.0,
+                    list[1] + 1.0 + k as f32 * ih,
+                    list[2] - 1.0,
+                    list[1] + 1.0 + (k + 1) as f32 * ih,
+                ];
                 if hover(ui, ir) && ui.pressed {
                     ui.open_menu = None;
                     ui.consumed_click = true;
@@ -1589,9 +2000,24 @@ fn menu_bar(ui: &mut Ui, app: &App, h: f32, actions: &mut Vec<Action>) {
                 }
                 if !label.is_empty() {
                     let lh = ui.line_height(FONT_UI);
-                    ui.text(ir[0] + 8.0, ir[1] + (ih + lh * 0.72) / 2.0, label, FONT_UI, theme::TEXT, false);
+                    ui.text(
+                        ir[0] + 8.0,
+                        ir[1] + (ih + lh * 0.72) / 2.0,
+                        label,
+                        FONT_UI,
+                        theme::TEXT,
+                        false,
+                    );
                 } else {
-                    ui.quad([ir[0] + 6.0, ir[1] + ih / 2.0, ir[2] - 6.0, ir[1] + ih / 2.0 + 1.0], theme::BORDER);
+                    ui.quad(
+                        [
+                            ir[0] + 6.0,
+                            ir[1] + ih / 2.0,
+                            ir[2] - 6.0,
+                            ir[1] + ih / 2.0 + 1.0,
+                        ],
+                        theme::BORDER,
+                    );
                 }
             }
         }
@@ -1600,7 +2026,14 @@ fn menu_bar(ui: &mut Ui, app: &App, h: f32, actions: &mut Vec<Action>) {
     // правая часть меню: масштаб холста
     let lh = ui.line_height(FONT_SMALL);
     let zt = format!("Масштаб {}%", (app.zoom * 100.0).round() as i32);
-    ui.text_right(1e5 - 10.0, (h + lh * 0.72) / 2.0, &zt, FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text_right(
+        1e5 - 10.0,
+        (h + lh * 0.72) / 2.0,
+        &zt,
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
 }
 
 fn toolbar(ui: &mut Ui, app: &mut App, w: f32, top: f32, bottom: f32, actions: &mut Vec<Action>) {
@@ -1661,9 +2094,23 @@ fn properties(ui: &mut Ui, app: &mut App, r: Rect) {
     let mut y = r[1] + 6.0;
 
     // заголовок инструмента
-    ui.text(r[0] + PAD, y, app.tool.name(), FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD,
+        y,
+        app.tool.name(),
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
     y += 20.0;
-    ui.text(r[0] + PAD, y, app.tool.hint(), FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        r[0] + PAD,
+        y,
+        app.tool.hint(),
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
     y += 18.0;
     ui.quad([r[0] + PAD, y, r[2] - PAD, y + 1.0], theme::BORDER);
     y += 8.0;
@@ -1698,7 +2145,12 @@ fn properties(ui: &mut Ui, app: &mut App, r: Rect) {
                 let pr = [r[0] + PAD, y + 22.0, r[2] - PAD, y + 44.0];
                 ui.quad(pr, theme::FIELD);
                 let c = app.color();
-                let col = [c[0] as f32 / 255.0, c[1] as f32 / 255.0, c[2] as f32 / 255.0, c[3] as f32 / 255.0];
+                let col = [
+                    c[0] as f32 / 255.0,
+                    c[1] as f32 / 255.0,
+                    c[2] as f32 / 255.0,
+                    c[3] as f32 / 255.0,
+                ];
                 ui.checker(pr, 6.0);
                 if app.tool.is_freehand() {
                     let rad = (v * 0.5).clamp(0.8, 8.0);
@@ -1711,7 +2163,12 @@ fn properties(ui: &mut Ui, app: &mut App, r: Rect) {
                         brush_footprint(ui, x0 + i as f32 * step, cy, rad, app.params.shape, col);
                     }
                 } else {
-                    ui.circle((pr[0] + pr[2]) / 2.0, (pr[1] + pr[3]) / 2.0, (v * 0.5).clamp(1.0, 9.0), col);
+                    ui.circle(
+                        (pr[0] + pr[2]) / 2.0,
+                        (pr[1] + pr[3]) / 2.0,
+                        (v * 0.5).clamp(1.0, 9.0),
+                        col,
+                    );
                 }
                 y += 50.0;
             }
@@ -1802,11 +2259,21 @@ fn properties(ui: &mut Ui, app: &mut App, r: Rect) {
             ParamRow::Symmetry => {
                 // Симметрия мазка: режим выбирается списком, число лучей —
                 // только для радиальной, как в Clip Studio.
-                ui.text(r[0] + PAD, y, "Симметрия", FONT_SMALL, theme::TEXT_DIM, false);
+                ui.text(
+                    r[0] + PAD,
+                    y,
+                    "Симметрия",
+                    FONT_SMALL,
+                    theme::TEXT_DIM,
+                    false,
+                );
                 y += 16.0;
                 let fr = [r[0] + PAD, y, r[2] - PAD, y + 20.0];
                 let names: Vec<&str> = Symmetry::ALL.iter().map(|s| s.name()).collect();
-                let cur = Symmetry::ALL.iter().position(|s| *s == app.params.symmetry).unwrap_or(0);
+                let cur = Symmetry::ALL
+                    .iter()
+                    .position(|s| *s == app.params.symmetry)
+                    .unwrap_or(0);
                 if let Some(n) = ui.dropdown(fr, cur, &names) {
                     app.params.symmetry = Symmetry::ALL[n];
                 }
@@ -1822,7 +2289,11 @@ fn properties(ui: &mut Ui, app: &mut App, r: Rect) {
             }
             ParamRow::Sticky => {
                 let mut v = app.params.sticky;
-                if ui.checkbox([r[0] + PAD, y, r[2] - PAD, y + 20.0], &mut v, "Липкая палочка") {
+                if ui.checkbox(
+                    [r[0] + PAD, y, r[2] - PAD, y + 20.0],
+                    &mut v,
+                    "Липкая палочка",
+                ) {
                     app.params.sticky = v;
                 }
                 y += 26.0;
@@ -1843,7 +2314,11 @@ fn properties(ui: &mut Ui, app: &mut App, r: Rect) {
             }
             ParamRow::Heal => {
                 let mut v = app.params.heal;
-                if ui.checkbox([r[0] + PAD, y, r[2] - PAD, y + 20.0], &mut v, "Восстанавливающая") {
+                if ui.checkbox(
+                    [r[0] + PAD, y, r[2] - PAD, y + 20.0],
+                    &mut v,
+                    "Восстанавливающая",
+                ) {
                     app.params.heal = v;
                 }
                 y += 26.0;
@@ -1963,14 +2438,29 @@ fn ants_by_mask(ui: &mut Ui, app: &App, mask: &[u8], cr: Rect) {
 
 /// Рисует один отпечаток кисти заданной формы — тот же силуэт, что и мазок
 /// на холсте, только маленький.
-fn brush_footprint(ui: &mut Ui, cx: f32, cy: f32, rad: f32, shape: crate::tools::BrushShape, col: [f32; 4]) {
+fn brush_footprint(
+    ui: &mut Ui,
+    cx: f32,
+    cy: f32,
+    rad: f32,
+    shape: crate::tools::BrushShape,
+    col: [f32; 4],
+) {
     match shape {
         crate::tools::BrushShape::Round => ui.circle(cx, cy, rad, col),
         crate::tools::BrushShape::Ellipse => {
             for dy in 0..=(rad * 2.0).ceil() as i32 {
                 let t = (dy as f32 - rad) / rad.max(0.001);
                 let dx = rad * 1.9 * (1.0 - t * t).max(0.0).sqrt();
-                ui.quad([cx - dx, cy - rad + dy as f32, cx + dx, cy - rad + dy as f32 + 1.0], col);
+                ui.quad(
+                    [
+                        cx - dx,
+                        cy - rad + dy as f32,
+                        cx + dx,
+                        cy - rad + dy as f32 + 1.0,
+                    ],
+                    col,
+                );
             }
         }
         crate::tools::BrushShape::Square => {
@@ -1996,7 +2486,14 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
     // Заголовок. Ниже верхнего края на 8 px, чтобы не прилипал к полю HEX
     // колорпикера, когда параметров инструмента много.
     let head = [r[0] + PAD, r[1] + 8.0, r[2] - PAD, r[1] + 24.0];
-    ui.text(head[0], head[1], &format!("Слои ({})", app.doc.layers.len()), FONT_UI, theme::TEXT, true);
+    ui.text(
+        head[0],
+        head[1],
+        &format!("Слои ({})", app.doc.layers.len()),
+        FONT_UI,
+        theme::TEXT,
+        true,
+    );
     let active = app.doc.active;
     let meta = app.doc.layers[active].meta.clone();
 
@@ -2011,7 +2508,9 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
         .rev()
         .filter(|i| app.layer_visible_in_panel(*i))
         .collect();
-    let vis_rows = ((list_h / row_h).floor() as usize).max(1).min(shown.len().max(1));
+    let vis_rows = ((list_h / row_h).floor() as usize)
+        .max(1)
+        .min(shown.len().max(1));
     let max_scroll = shown.len().saturating_sub(vis_rows);
     if app.layer_scroll > max_scroll {
         app.layer_scroll = max_scroll;
@@ -2043,9 +2542,13 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
                     app.move_layer(target);
                 }
             } else if target != from {
-                let line = (list_top + (row_of_index(&shown, from, app.layer_scroll) as f32 + 0.5) * row_h)
+                let line = (list_top
+                    + (row_of_index(&shown, from, app.layer_scroll) as f32 + 0.5) * row_h)
                     .clamp(list_top, list_top + list_h);
-                ui.quad([r[0] + 4.0, line - 1.5, r[2] - 4.0, line + 1.5], theme::ACCENT);
+                ui.quad(
+                    [r[0] + 4.0, line - 1.5, r[2] - 4.0, line + 1.5],
+                    theme::ACCENT,
+                );
             }
         } else if ui.released {
             app.layer_drag = None;
@@ -2057,7 +2560,12 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
     // Сверху — верхний слой
     for row in app.layer_scroll..shown.len().min(app.layer_scroll + vis_rows) {
         let idx = shown[row];
-        let rr = [r[0] + 4.0, list_top + (row - app.layer_scroll) as f32 * row_h, r[2] - 4.0, list_top + (row - app.layer_scroll + 1) as f32 * row_h - 2.0];
+        let rr = [
+            r[0] + 4.0,
+            list_top + (row - app.layer_scroll) as f32 * row_h,
+            r[2] - 4.0,
+            list_top + (row - app.layer_scroll + 1) as f32 * row_h - 2.0,
+        ];
         // Цветная метка слоя — полоска у левого края строки, как в Clip Studio.
         // Клик по ней переключает цвет метки (нет → красная → … → нет).
         let tag = app.doc.layers[idx].meta.tag;
@@ -2068,7 +2576,12 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
         }
         // Строку можно перетащить мышью, но не за кнопку видимости и не за маску.
         let vis_r = [rr[0] + 10.0, rr[1] + 6.0, rr[0] + 26.0, rr[1] + 22.0];
-        let mth = [rr[0] + 56.0, rr[1] + 4.0, rr[0] + 56.0 + 22.0, rr[1] + 4.0 + 22.0];
+        let mth = [
+            rr[0] + 56.0,
+            rr[1] + 4.0,
+            rr[0] + 56.0 + 22.0,
+            rr[1] + 4.0 + 22.0,
+        ];
         let mask_area = app.doc.layers[idx].mask.is_some() && hover(ui, mth);
         let on_row = hover(ui, rr);
         // Шапка папки — если слой открывает новую группу, рисуем над ним папку.
@@ -2080,15 +2593,36 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
             ui.frame(gr, theme::BORDER, 1.0);
             // Стрелка раскрытия
             let tri = [gr[0] + 8.0, gr[1] + (gr[3] - gr[1]) / 2.0];
-            ui.quad([tri[0] - 3.0, tri[1] - 4.0, tri[0] + 2.0, tri[1] + 3.0], theme::TEXT_DIM);
+            ui.quad(
+                [tri[0] - 3.0, tri[1] - 4.0, tri[0] + 2.0, tri[1] + 3.0],
+                theme::TEXT_DIM,
+            );
             if !open {
-                ui.quad([tri[0] - 1.0, tri[1] - 4.0, tri[0] + 3.0, tri[1] + 4.0], theme::FIELD);
+                ui.quad(
+                    [tri[0] - 1.0, tri[1] - 4.0, tri[0] + 3.0, tri[1] + 4.0],
+                    theme::FIELD,
+                );
             }
-            ui.text(gr[0] + 20.0, gr[1] + 2.0, &gname, FONT_SMALL, theme::TEXT, true);
+            ui.text(
+                gr[0] + 20.0,
+                gr[1] + 2.0,
+                &gname,
+                FONT_SMALL,
+                theme::TEXT,
+                true,
+            );
             // Глаз на папке — видимость сразу всех слоёв внутри.
             let gv = [gr[2] - 22.0, gr[1] + 2.0, gr[2] - 4.0, gr[3] - 2.0];
-            let all_vis = app.group_members(idx).iter().all(|i| app.doc.layers[*i].meta.visible);
-            if ui.tool_button(gv, if all_vis { Icon::Eye } else { Icon::EyeOff }, "Видимость папки", false) {
+            let all_vis = app
+                .group_members(idx)
+                .iter()
+                .all(|i| app.doc.layers[*i].meta.visible);
+            if ui.tool_button(
+                gv,
+                if all_vis { Icon::Eye } else { Icon::EyeOff },
+                "Видимость папки",
+                false,
+            ) {
                 app.toggle_group_visibility(idx);
             }
             if hover(ui, gr) && !hover(ui, gv) && ui.pressed {
@@ -2112,28 +2646,62 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
         }
         let visible = app.doc.layers[idx].meta.visible;
         let non_empty = app.doc.layers[idx].pixels.iter().any(|v| *v != 0);
-        if ui.tool_button(vis_r, if visible { Icon::Eye } else { Icon::EyeOff }, "Видимость", false) {
+        if ui.tool_button(
+            vis_r,
+            if visible { Icon::Eye } else { Icon::EyeOff },
+            "Видимость",
+            false,
+        ) {
             let i = idx;
             app.set_layer_meta(i, |m| m.visible = !m.visible);
         }
         // миниатюра слоя из атласа
-        let th = [rr[0] + 30.0, rr[1] + 4.0, rr[0] + 30.0 + 22.0, rr[1] + 4.0 + 22.0];
+        let th = [
+            rr[0] + 30.0,
+            rr[1] + 4.0,
+            rr[0] + 30.0 + 22.0,
+            rr[1] + 4.0 + 22.0,
+        ];
         ui.checker(th, 6.0);
         if non_empty {
             ui.thumb(th, app.thumb_uv(idx));
         }
         // Активная цель рисования обведена белой рамкой: слой или маска.
         let editing_here = idx == active && !app.edit_mask;
-        ui.frame(th, if editing_here { [1.0, 1.0, 1.0, 1.0] } else { theme::BORDER }, if editing_here { 2.0 } else { 1.0 });
+        ui.frame(
+            th,
+            if editing_here {
+                [1.0, 1.0, 1.0, 1.0]
+            } else {
+                theme::BORDER
+            },
+            if editing_here { 2.0 } else { 1.0 },
+        );
         // Миниатюра маски — справа от слоя, клик по ней включает правку маски.
         if let Some(mask) = app.doc.layers[idx].mask.as_ref() {
             let mask_used = mask.iter().any(|v| *v != 0);
             ui.checker(mth, 6.0);
             if mask_used {
-                ui.mask_thumb(mth, app.thumb_uv(idx), if app.doc.layers[idx].mask_on { 1.0 } else { 0.45 });
+                ui.mask_thumb(
+                    mth,
+                    app.thumb_uv(idx),
+                    if app.doc.layers[idx].mask_on {
+                        1.0
+                    } else {
+                        0.45
+                    },
+                );
             }
             let mask_active = idx == active && app.edit_mask;
-            ui.frame(mth, if mask_active { [1.0, 1.0, 1.0, 1.0] } else { theme::BORDER }, if mask_active { 2.0 } else { 1.0 });
+            ui.frame(
+                mth,
+                if mask_active {
+                    [1.0, 1.0, 1.0, 1.0]
+                } else {
+                    theme::BORDER
+                },
+                if mask_active { 2.0 } else { 1.0 },
+            );
             if mask_area && ui.pressed {
                 app.select_layer(idx);
                 app.set_edit_mask(!app.edit_mask);
@@ -2145,14 +2713,25 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
         };
         let name = app.doc.layer_name(idx);
         let lh = ui.line_height(FONT_SMALL);
-        let col = if idx == active { theme::TEXT } else { theme::TEXT_DIM };
+        let col = if idx == active {
+            theme::TEXT
+        } else {
+            theme::TEXT_DIM
+        };
         // Двойной щелчок по имени переименовывает слой прямо в строке.
         if app.rename == Some(idx) {
             // Поле ввода имени прямо в строке списка.
             let er = [name_x - 2.0, rr[1] + 5.0, rr[2] - 34.0, rr[1] + row_h - 7.0];
             ui.quad(er, theme::FIELD);
             ui.frame(er, theme::ACCENT, 1.0);
-            ui.text(er[0] + 4.0, er[1] + 2.0, &app.rename_buf, FONT_SMALL, theme::TEXT, false);
+            ui.text(
+                er[0] + 4.0,
+                er[1] + 2.0,
+                &app.rename_buf,
+                FONT_SMALL,
+                theme::TEXT,
+                false,
+            );
             let keys: Vec<KeyEv> = std::mem::take(&mut ui.keys);
             for k in keys {
                 match k {
@@ -2166,8 +2745,20 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
                 }
             }
         } else {
-            ui.text(name_x, rr[1] + (row_h + lh * 0.72) / 2.0 - 2.0, &name, FONT_SMALL, col, idx == active);
-            if ui.double_click(0x1A9E + idx as u32) && on_row && !hover(ui, vis_r) && !hover(ui, mth) && !hover(ui, tag_r) {
+            ui.text(
+                name_x,
+                rr[1] + (row_h + lh * 0.72) / 2.0 - 2.0,
+                &name,
+                FONT_SMALL,
+                col,
+                idx == active,
+            );
+            if ui.double_click(0x1A9E + idx as u32)
+                && on_row
+                && !hover(ui, vis_r)
+                && !hover(ui, mth)
+                && !hover(ui, tag_r)
+            {
                 app.select_layer(idx);
                 app.begin_rename();
             }
@@ -2179,8 +2770,18 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
             ui.line(ax, ay - 3.0, ax - 3.0, ay, theme::ACCENT, 1.5);
             ui.line(ax - 3.0, ay, ax, ay + 3.0, theme::ACCENT, 1.5);
         }
-        let op = format!("{}%", (app.doc.layers[idx].meta.opacity * 100.0).round() as i32);
-        ui.text_right(rr[2] - 6.0, rr[1] + (row_h + lh * 0.72) / 2.0 - 2.0, &op, FONT_SMALL, theme::TEXT_DIM, false);
+        let op = format!(
+            "{}%",
+            (app.doc.layers[idx].meta.opacity * 100.0).round() as i32
+        );
+        ui.text_right(
+            rr[2] - 6.0,
+            rr[1] + (row_h + lh * 0.72) / 2.0 - 2.0,
+            &op,
+            FONT_SMALL,
+            theme::TEXT_DIM,
+            false,
+        );
     }
     ui.pop_clip();
 
@@ -2194,7 +2795,10 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
         app.set_layer_meta(i, |m| m.opacity = op.clamp(0.0, 1.0));
     }
     let blend_names: Vec<&str> = BlendMode::ALL.iter().map(|b| b.name()).collect();
-    let bi = BlendMode::ALL.iter().position(|b| *b == meta.blend).unwrap_or(0);
+    let bi = BlendMode::ALL
+        .iter()
+        .position(|b| *b == meta.blend)
+        .unwrap_or(0);
     let br = [r[0] + PAD + half + 6.0, py, r[2] - PAD, py + 20.0];
     if let Some(n) = ui.dropdown(br, bi, &blend_names) {
         let mode = BlendMode::ALL[n];
@@ -2207,7 +2811,10 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
     if ui.small_button([r[0] + PAD, fy, r[0] + PAD + fw, fy + 20.0], "⇋ Сверху") {
         actions.push(Action::FlipLayerV);
     }
-    if ui.small_button([r[0] + PAD + fw + 6.0, fy, r[2] - PAD, fy + 20.0], "⇄ Слева") {
+    if ui.small_button(
+        [r[0] + PAD + fw + 6.0, fy, r[2] - PAD, fy + 20.0],
+        "⇄ Слева",
+    ) {
         actions.push(Action::FlipLayerH);
     }
 
@@ -2215,7 +2822,14 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
     let by = r[3] - 26.0;
     let b = 24.0;
     let bw = (r[2] - r[0] - PAD * 2.0 - 5.0 * 6.0) / 7.0;
-    let mk = |i: usize| [r[0] + PAD + (b + 5.0) * i as f32, by, r[0] + PAD + (b + 5.0) * i as f32 + bw, by + 22.0];
+    let mk = |i: usize| {
+        [
+            r[0] + PAD + (b + 5.0) * i as f32,
+            by,
+            r[0] + PAD + (b + 5.0) * i as f32 + bw,
+            by + 22.0,
+        ]
+    };
     if ui.small_button(mk(0), "+") {
         actions.push(Action::AddLayer);
     }
@@ -2246,9 +2860,23 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
     }
     // Подсказка под кнопкой маски: что сейчас рисуется.
     if app.edit_mask {
-        ui.text(r[0] + PAD + (b + 5.0) * 5.0, by - 12.0, "маска", FONT_SMALL, theme::ACCENT, false);
+        ui.text(
+            r[0] + PAD + (b + 5.0) * 5.0,
+            by - 12.0,
+            "маска",
+            FONT_SMALL,
+            theme::ACCENT,
+            false,
+        );
     } else if has_mask && !app.doc.layers[active].mask_on {
-        ui.text(r[0] + PAD + (b + 5.0) * 5.0, by - 12.0, "выкл", FONT_SMALL, theme::TEXT_DIM, false);
+        ui.text(
+            r[0] + PAD + (b + 5.0) * 5.0,
+            by - 12.0,
+            "выкл",
+            FONT_SMALL,
+            theme::TEXT_DIM,
+            false,
+        );
     }
     let _ = b;
 }
@@ -2283,16 +2911,32 @@ fn history_strip(ui: &mut Ui, app: &mut App, r: Rect) {
         if idx >= labels.len() {
             break;
         }
-        let cr = [x0 + i as f32 * steps_h, r[1] + 6.0, x0 + (i as f32 + 1.0) * steps_h - 4.0, r[3] - 6.0];
+        let cr = [
+            x0 + i as f32 * steps_h,
+            r[1] + 6.0,
+            x0 + (i as f32 + 1.0) * steps_h - 4.0,
+            r[3] - 6.0,
+        ];
         let current = idx == pos;
         let hot = hover(ui, cr);
         if ui.list_row(cr, current, hot) && !current {
             app.history_goto(idx);
         }
-        let col = if current { theme::TEXT } else { theme::TEXT_DIM };
+        let col = if current {
+            theme::TEXT
+        } else {
+            theme::TEXT_DIM
+        };
         // шаги после текущего показаны бледнее: их можно повторить
         let mark = if current { "▸ " } else { "" };
-        ui.text(cr[0] + 8.0, cy, &format!("{}{}", mark, labels[idx]), FONT_SMALL, col, current);
+        ui.text(
+            cr[0] + 8.0,
+            cy,
+            &format!("{}{}", mark, labels[idx]),
+            FONT_SMALL,
+            col,
+            current,
+        );
     }
     ui.pop_clip();
 
@@ -2337,22 +2981,43 @@ fn status_bar(ui: &mut Ui, app: &mut App, w: f32, y: f32) {
     ui.text(PAD, ty, &left, FONT_SMALL, theme::TEXT_DIM, false);
     let right = match &app.notice {
         Some((msg, t)) if t.elapsed().as_secs_f32() < 4.0 => msg.clone(),
-        _ => app.path.clone().unwrap_or_else(|| "Файл не сохранён".to_string()),
+        _ => app
+            .path
+            .clone()
+            .unwrap_or_else(|| "Файл не сохранён".to_string()),
     };
     ui.text_right(w - PAD, ty, &right, FONT_SMALL, theme::TEXT_DIM, false);
 }
 
 /// Модальное окно работы с файлами — полностью своё, без системных диалогов.
-pub fn file_dialog(ui: &mut Ui, dlg: &mut crate::app::FileDialog, w: f32, h: f32, actions: &mut Vec<Action>) {
+pub fn file_dialog(
+    ui: &mut Ui,
+    dlg: &mut crate::app::FileDialog,
+    w: f32,
+    h: f32,
+    actions: &mut Vec<Action>,
+) {
     ui.quad([0.0, 0.0, w, h], [0.0, 0.0, 0.0, 0.55]);
     let dw = 620.0;
     let dh = 400.0;
-    let r = [(w - dw) / 2.0, (h - dh) / 2.0, (w + dw) / 2.0, (h + dh) / 2.0];
+    let r = [
+        (w - dw) / 2.0,
+        (h - dh) / 2.0,
+        (w + dw) / 2.0,
+        (h + dh) / 2.0,
+    ];
     ui.quad(r, theme::PANEL);
     ui.frame(r, theme::BORDER, 1.0);
     let title = dlg.mode.title();
     let lh = ui.line_height(FONT_UI + 2.0);
-    ui.text(r[0] + PAD + 4.0, r[1] + 10.0, title, FONT_UI + 2.0, theme::TEXT, true);
+    ui.text(
+        r[0] + PAD + 4.0,
+        r[1] + 10.0,
+        title,
+        FONT_UI + 2.0,
+        theme::TEXT,
+        true,
+    );
 
     // поле пути
     let pr = [r[0] + PAD, r[1] + 40.0, r[2] - PAD, r[1] + 64.0];
@@ -2378,10 +3043,36 @@ pub fn file_dialog(ui: &mut Ui, dlg: &mut crate::app::FileDialog, w: f32, h: f32
         }
     }
     ui.quad(pr, theme::FIELD);
-    ui.frame(pr, if focused { theme::ACCENT } else { theme::BORDER }, 1.0);
-    let shown = if dlg.path.is_empty() { "C:\\" } else { &dlg.path };
-    ui.text(pr[0] + 8.0, pr[1] + (24.0 + lh * 0.72) / 2.0, shown, FONT_SMALL, theme::TEXT, false);
-    ui.text(r[0] + PAD, r[1] + 72.0, &format!("{} элементов", dlg.entries.len()), FONT_SMALL, theme::TEXT_DIM, false);
+    ui.frame(
+        pr,
+        if focused {
+            theme::ACCENT
+        } else {
+            theme::BORDER
+        },
+        1.0,
+    );
+    let shown = if dlg.path.is_empty() {
+        "C:\\"
+    } else {
+        &dlg.path
+    };
+    ui.text(
+        pr[0] + 8.0,
+        pr[1] + (24.0 + lh * 0.72) / 2.0,
+        shown,
+        FONT_SMALL,
+        theme::TEXT,
+        false,
+    );
+    ui.text(
+        r[0] + PAD,
+        r[1] + 72.0,
+        &format!("{} элементов", dlg.entries.len()),
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
 
     // список
     let lr = [r[0] + PAD, r[1] + 92.0, r[2] - PAD - 150.0, r[3] - 76.0];
@@ -2397,7 +3088,12 @@ pub fn file_dialog(ui: &mut Ui, dlg: &mut crate::app::FileDialog, w: f32, h: f32
             break;
         }
         let (name, is_dir) = dlg.entries[idx].clone();
-        let rr = [lr[0] + 1.0, lr[1] + 1.0 + i as f32 * row_h, lr[2] - 1.0, lr[1] + 1.0 + (i + 1) as f32 * row_h];
+        let rr = [
+            lr[0] + 1.0,
+            lr[1] + 1.0 + i as f32 * row_h,
+            lr[2] - 1.0,
+            lr[1] + 1.0 + (i + 1) as f32 * row_h,
+        ];
         if ui.list_row(rr, false, false) {
             if is_dir {
                 dlg.enter_dir(&name);
@@ -2405,9 +3101,20 @@ pub fn file_dialog(ui: &mut Ui, dlg: &mut crate::app::FileDialog, w: f32, h: f32
                 dlg.file = name.clone();
             }
         }
-        let icon_c = if is_dir { theme::ACCENT } else { theme::TEXT_DIM };
+        let icon_c = if is_dir {
+            theme::ACCENT
+        } else {
+            theme::TEXT_DIM
+        };
         let rh = ui.line_height(FONT_SMALL);
-        ui.text(rr[0] + 8.0, rr[1] + (row_h + rh * 0.72) / 2.0, &name, FONT_SMALL, icon_c, false);
+        ui.text(
+            rr[0] + 8.0,
+            rr[1] + (row_h + rh * 0.72) / 2.0,
+            &name,
+            FONT_SMALL,
+            icon_c,
+            false,
+        );
     }
     ui.pop_clip();
     if hover(ui, lr) {
@@ -2448,11 +3155,25 @@ pub fn file_dialog(ui: &mut Ui, dlg: &mut crate::app::FileDialog, w: f32, h: f32
     }
     ui.quad(fr, theme::FIELD);
     ui.frame(fr, if ffoc { theme::ACCENT } else { theme::BORDER }, 1.0);
-    ui.text(fr[0] + 8.0, fr[1] + (24.0 + lh * 0.72) / 2.0, &dlg.file, FONT_SMALL, theme::TEXT, false);
+    ui.text(
+        fr[0] + 8.0,
+        fr[1] + (24.0 + lh * 0.72) / 2.0,
+        &dlg.file,
+        FONT_SMALL,
+        theme::TEXT,
+        false,
+    );
 
     // кнопки
     let br = [r[2] - PAD - 80.0, r[3] - 36.0, r[2] - PAD, r[3] - 12.0];
-    if ui.button(br, if dlg.mode.is_save() { "Сохранить" } else { "Открыть" }) {
+    if ui.button(
+        br,
+        if dlg.mode.is_save() {
+            "Сохранить"
+        } else {
+            "Открыть"
+        },
+    ) {
         dlg.accept();
         ui.focus = None;
     }
@@ -2467,4 +3188,3 @@ fn hover(ui: &Ui, r: Rect) -> bool {
     let (mx, my) = ui.mouse;
     mx >= r[0] && mx < r[2] && my >= r[1] && my < r[3]
 }
-

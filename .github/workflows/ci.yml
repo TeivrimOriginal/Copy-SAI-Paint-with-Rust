@@ -1,0 +1,84 @@
+name: CI
+
+# 158 unit tests across 8 files in src/, and until this file existed nothing ran
+# them except a human at a terminal. The tests are pure logic — raster ops, PSD
+# parsing, project save/load, document geometry — and never open a window, so
+# they run headless. Only the linker needs Windows: build.rs pulls in opengl32,
+# user32 and friends, and glfw-sys compiles GLFW itself, which needs CMake.
+#
+# That last part is why this runs on windows-latest and not ubuntu: the crate is
+# a Win32 OpenGL application, and `cargo test` still has to link it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: fmt · clippy · 158 tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          rustup toolchain install stable --profile minimal --component rustfmt,clippy
+          rustup default stable
+          rustc --version
+
+      # glfw-sys builds GLFW with CMake, so cmake.exe has to be on PATH. It ships
+      # with the runner's Visual Studio, but the exact location moves between
+      # image versions, so look for it instead of hard-coding a path.
+      - name: Put CMake on PATH
+        shell: pwsh
+        run: |
+          $found = Get-Command cmake -ErrorAction SilentlyContinue
+          if (-not $found) {
+            $candidate = Get-ChildItem 'C:\Program Files\Microsoft Visual Studio' -Filter cmake.exe -Recurse -ErrorAction SilentlyContinue |
+              Select-Object -First 1
+            if (-not $candidate) { throw 'cmake.exe not found on this runner' }
+            $bin = Split-Path $candidate.FullName
+            Add-Content -Path $env:GITHUB_PATH -Value $bin
+            Write-Host "added $bin to PATH"
+          } else {
+            Write-Host "cmake already on PATH: $($found.Source)"
+          }
+          cmake --version
+
+      # `.cargo/config.toml` replaces crates.io with a mirror, because the
+      # machine this was developed on has its TLS to crates.io cut. Turning it off
+      # is done by overwriting the file rather than by passing --config, so there
+      # is no shell quoting to get wrong.
+      - name: Use crates.io directly
+        run: |
+          printf '# CI: no source replacement, crates.io is reachable here.\n' > .cargo/config.toml
+          cat .cargo/config.toml
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/registry/src
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: rustfmt
+        run: cargo fmt --all --check
+
+      - name: clippy
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+      - name: tests
+        run: cargo test --locked

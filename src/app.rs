@@ -2,8 +2,8 @@
 
 use crate::doc::{Action, Document, History, Layer, LayerMeta};
 use crate::raster;
-use crate::tools::{Params, Tool};
 use crate::raster::{RectData, SelRect};
+use crate::tools::{Params, Tool};
 use crate::ui::Rect;
 use std::time::Instant;
 
@@ -54,7 +54,13 @@ impl Default for Stabilizer {
 
 impl Stabilizer {
     pub fn new() -> Self {
-        Self { hist: [(0.0, 0.0); 4], n: 0, prev_smooth: (0.0, 0.0), prev2_smooth: (0.0, 0.0), pos: (0.0, 0.0) }
+        Self {
+            hist: [(0.0, 0.0); 4],
+            n: 0,
+            prev_smooth: (0.0, 0.0),
+            prev2_smooth: (0.0, 0.0),
+            pos: (0.0, 0.0),
+        }
     }
 
     pub fn reset(&mut self, p: (f32, f32)) {
@@ -84,9 +90,17 @@ impl Stabilizer {
     pub fn push(&mut self, p: (f32, f32), smoothing: f32) -> (f32, f32) {
         // Сколько точек участвует: 0 — только курсор (прямая линия),
         // 1 — все четыре, то есть сильное сглаживание формы.
-        let keep = if smoothing <= 0.001 { 1 } else { 1 + (smoothing * 3.0).round() as usize };
+        let keep = if smoothing <= 0.001 {
+            1
+        } else {
+            1 + (smoothing * 3.0).round() as usize
+        };
         // Опорная точка дуги считается по истории ДО добавления новой точки.
-        let smooth = if self.n == 0 { p } else { self.average(keep.max(1)) };
+        let smooth = if self.n == 0 {
+            p
+        } else {
+            self.average(keep.max(1))
+        };
         self.prev2_smooth = smooth;
         self.prev_smooth = smooth;
         self.hist.rotate_right(1);
@@ -102,7 +116,11 @@ impl Stabilizer {
     /// зависит, насколько плавным получится поворот.
     pub fn curve(&self) -> [(f32, f32); 4] {
         let p2 = self.pos;
-        let p1 = if self.n >= 2 { self.hist[1] } else { self.prev_smooth };
+        let p1 = if self.n >= 2 {
+            self.hist[1]
+        } else {
+            self.prev_smooth
+        };
         let dir = (p2.0 - p1.0, p2.1 - p1.1);
         let p3 = if dir.0 * dir.0 + dir.1 * dir.1 > 0.0001 {
             (p2.0 + dir.0, p2.1 + dir.1)
@@ -264,7 +282,11 @@ impl FileDialog {
     pub fn new(mode: DialogMode, start: &str) -> Self {
         let mut d = Self {
             mode,
-            path: if start.is_empty() { default_dir() } else { start.to_string() },
+            path: if start.is_empty() {
+                default_dir()
+            } else {
+                start.to_string()
+            },
             file: if mode.is_save() {
                 format!("рисунок{}", mode.ext())
             } else {
@@ -296,7 +318,10 @@ impl FileDialog {
                 let is_dir = e.path().is_dir();
                 if is_dir {
                     dirs.push((name, true));
-                } else if filters.iter().any(|f| name.to_lowercase().ends_with(&format!(".{}", f))) {
+                } else if filters
+                    .iter()
+                    .any(|f| name.to_lowercase().ends_with(&format!(".{}", f)))
+                {
                     files.push((name, false));
                 }
             }
@@ -313,7 +338,10 @@ impl FileDialog {
                 self.path = up.to_string_lossy().into_owned();
             }
         } else {
-            self.path = std::path::Path::new(&self.path).join(name).to_string_lossy().into_owned();
+            self.path = std::path::Path::new(&self.path)
+                .join(name)
+                .to_string_lossy()
+                .into_owned();
         }
         self.scan();
     }
@@ -328,7 +356,10 @@ impl FileDialog {
         if self.mode.is_save() && !name.to_lowercase().ends_with(self.mode.ext()) {
             name.push_str(self.mode.ext());
         }
-        let full = std::path::Path::new(&self.path).join(name).to_string_lossy().into_owned();
+        let full = std::path::Path::new(&self.path)
+            .join(name)
+            .to_string_lossy()
+            .into_owned();
         self.result = Some((full, self.mode));
     }
 
@@ -485,7 +516,18 @@ fn stamp_dab(
     let (r, hard, op) = p2;
     if let Some(patch) = heal {
         raster::stamp_heal(
-            layer, w, h, &patch.data, patch.w, patch.h, p.0, p.1, r, hard, strength, shape,
+            layer,
+            w,
+            h,
+            &patch.data,
+            patch.w,
+            patch.h,
+            p.0,
+            p.1,
+            r,
+            hard,
+            strength,
+            shape,
         );
         return;
     }
@@ -707,8 +749,8 @@ impl App {
             cursor_screen: (0.0, 0.0),
             cursor_in_canvas: false,
             selection: None,
-        sel_mask: None,
-        sel_mask_rev: 0,
+            sel_mask: None,
+            sel_mask_rev: 0,
             clipboard: None,
             floating: None,
             ants_phase: 0.0,
@@ -762,9 +804,9 @@ impl App {
             hsv_sat: 0.0,
             hsv_light: 0.0,
             balance: [[0.0; 3]; 3],
-        fx_dialog: false,
-        rename: None,
-        rename_buf: String::new(),
+            fx_dialog: false,
+            rename: None,
+            rename_buf: String::new(),
             f_bright: 0.0,
             f_contrast: 0.0,
             f_saturate: 0.0,
@@ -799,16 +841,25 @@ impl App {
     // --- преобразование координат ---
 
     pub fn canvas_to_screen(&self, x: f32, y: f32) -> (f32, f32) {
-        (self.canvas_rect[0] + self.pan.0 + x * self.zoom, self.canvas_rect[1] + self.pan.1 + y * self.zoom)
+        (
+            self.canvas_rect[0] + self.pan.0 + x * self.zoom,
+            self.canvas_rect[1] + self.pan.1 + y * self.zoom,
+        )
     }
 
     pub fn screen_to_canvas(&self, x: f32, y: f32) -> (f32, f32) {
-        ((x - self.canvas_rect[0] - self.pan.0) / self.zoom, (y - self.canvas_rect[1] - self.pan.1) / self.zoom)
+        (
+            (x - self.canvas_rect[0] - self.pan.0) / self.zoom,
+            (y - self.canvas_rect[1] - self.pan.1) / self.zoom,
+        )
     }
 
     pub fn in_canvas(&self, p: (f32, f32)) -> bool {
         let (x, y) = p;
-        x >= self.canvas_rect[0] && x < self.canvas_rect[2] && y >= self.canvas_rect[1] && y < self.canvas_rect[3]
+        x >= self.canvas_rect[0]
+            && x < self.canvas_rect[2]
+            && y >= self.canvas_rect[1]
+            && y < self.canvas_rect[3]
     }
 
     pub fn fit_view(&mut self) {
@@ -832,7 +883,10 @@ impl App {
     }
 
     pub fn zoom_by(&mut self, factor: f32) {
-        let c = ((self.canvas_rect[0] + self.canvas_rect[2]) / 2.0, (self.canvas_rect[1] + self.canvas_rect[3]) / 2.0);
+        let c = (
+            (self.canvas_rect[0] + self.canvas_rect[2]) / 2.0,
+            (self.canvas_rect[1] + self.canvas_rect[3]) / 2.0,
+        );
         self.zoom_at(c, factor);
     }
 
@@ -879,7 +933,11 @@ impl App {
         if !self.inside(p.0, p.1) {
             return;
         }
-        let color = if secondary { self.other_color() } else { self.color() };
+        let color = if secondary {
+            self.other_color()
+        } else {
+            self.color()
+        };
         match self.tool {
             Tool::Select => {
                 self.begin_select(p);
@@ -923,7 +981,14 @@ impl App {
                     self.params.tolerance as u8,
                     self.params.contiguous,
                 );
-                self.history.push("Заливка", Action::Pixels { layer: self.doc.active, before: base, after: self.doc.layers[self.doc.active].pixels.clone() });
+                self.history.push(
+                    "Заливка",
+                    Action::Pixels {
+                        layer: self.doc.active,
+                        before: base,
+                        after: self.doc.layers[self.doc.active].pixels.clone(),
+                    },
+                );
                 self.doc.touch();
                 self.dirty = true;
                 return;
@@ -954,7 +1019,11 @@ impl App {
             self.stab.reset(p);
             let (w, h) = (self.doc.width, self.doc.height);
             let value = if self.tool == Tool::Eraser { 0 } else { 255 };
-            let (r, hard, op) = (self.params.size / 2.0, self.params.hardness, self.params.opacity);
+            let (r, hard, op) = (
+                self.params.size / 2.0,
+                self.params.hardness,
+                self.params.opacity,
+            );
             let shape = self.brush_shape();
             if let Some(m) = self.doc.active_layer_mut().mask.as_mut() {
                 raster::mask_stamp_shape(m, w, h, p.0, p.1, r, hard, value, op, shape);
@@ -984,7 +1053,11 @@ impl App {
             let shape = self.brush_shape();
             let sym = (self.params.symmetry, self.params.sym_sides.round() as u32);
             let heal = self.heal_patch.clone();
-            let (sticky, hue, sat) = (self.params.sticky, self.params.sticky_hue, self.params.sticky_sat);
+            let (sticky, hue, sat) = (
+                self.params.sticky,
+                self.params.sticky_hue,
+                self.params.sticky_sat,
+            );
             let base = self.stroke_base.clone();
             let strength = self.params.heal_strength;
             let layer = self.doc.active_layer_mut();
@@ -992,7 +1065,18 @@ impl App {
             for xf in raster::symmetry_xforms(sym.0, sym.1, w, h) {
                 let q = xf.apply(p);
                 stamp_dab(
-                    layer, w, h, q, p2, c, shape, sticky, hue, sat, heal.as_ref(), strength,
+                    layer,
+                    w,
+                    h,
+                    q,
+                    p2,
+                    c,
+                    shape,
+                    sticky,
+                    hue,
+                    sat,
+                    heal.as_ref(),
+                    strength,
                     base.as_deref(),
                 );
             }
@@ -1006,7 +1090,11 @@ impl App {
         }
         let p = if self.inside(p.0, p.1) {
             // Курсор притягивается к направляющим, сетке и углу 15°.
-            let from = if self.drawing { Some(self.stroke_start) } else { None };
+            let from = if self.drawing {
+                Some(self.stroke_start)
+            } else {
+                None
+            };
             self.apply_snap(p, from)
         } else {
             (
@@ -1032,7 +1120,11 @@ impl App {
                 let mut mm = std::mem::take(m);
                 raster::stamp_curve(
                     |x, y| raster::mask_stamp_shape(&mut mm, w, h, x, y, r, hard, value, op, shape),
-                    curve[0], curve[1], curve[2], curve[3], spacing,
+                    curve[0],
+                    curve[1],
+                    curve[2],
+                    curve[3],
+                    spacing,
                 );
                 self.doc.active_layer_mut().mask = Some(mm);
             }
@@ -1054,24 +1146,46 @@ impl App {
             let shape = self.brush_shape();
             let (r, hard, op) = (p2.0, p2.1, p2.2);
             let heal = self.heal_patch.clone();
-            let (sticky, hue, sat) = (self.params.sticky, self.params.sticky_hue, self.params.sticky_sat);
+            let (sticky, hue, sat) = (
+                self.params.sticky,
+                self.params.sticky_hue,
+                self.params.sticky_sat,
+            );
             let strength = self.params.heal_strength;
             let layer = self.doc.active_layer_mut();
             let base_ref = base.as_deref();
             raster::stamp_curve(
                 |x, y| {
                     stamp_dab(
-                        layer, w, h, (x, y), (r, hard, op), color, shape, sticky, hue, sat,
-                        heal.as_ref(), strength, base_ref,
+                        layer,
+                        w,
+                        h,
+                        (x, y),
+                        (r, hard, op),
+                        color,
+                        shape,
+                        sticky,
+                        hue,
+                        sat,
+                        heal.as_ref(),
+                        strength,
+                        base_ref,
                     )
                 },
-                curve[0], curve[1], curve[2], curve[3], spacing,
+                curve[0],
+                curve[1],
+                curve[2],
+                curve[3],
+                spacing,
             );
             if sym.0.on() {
                 // Симметричный мазок: тот же участок дуги в отражённых копиях.
                 // Преобразования одинаковы для всех точек, поэтому индексы
                 // копий совпадают и мазок не «ломается» на оси симметрии.
-                for xf in raster::symmetry_xforms(sym.0, sym.1, w, h).into_iter().skip(1) {
+                for xf in raster::symmetry_xforms(sym.0, sym.1, w, h)
+                    .into_iter()
+                    .skip(1)
+                {
                     let c: [(f32, f32); 4] = [
                         xf.apply(curve[0]),
                         xf.apply(curve[1]),
@@ -1080,17 +1194,34 @@ impl App {
                     ];
                     // Точка на оси совпала бы с оригиналом — лишний отпечаток
                     // только уплотнил бы мазок.
-                    if (0..4).all(|i| (c[i].0 - curve[i].0).abs() < 0.01 && (c[i].1 - curve[i].1).abs() < 0.01) {
+                    if (0..4).all(|i| {
+                        (c[i].0 - curve[i].0).abs() < 0.01 && (c[i].1 - curve[i].1).abs() < 0.01
+                    }) {
                         continue;
                     }
                     raster::stamp_curve(
                         |x, y| {
                             stamp_dab(
-                                layer, w, h, (x, y), (r, hard, op), color, shape, sticky, hue, sat,
-                                heal.as_ref(), strength, base_ref,
+                                layer,
+                                w,
+                                h,
+                                (x, y),
+                                (r, hard, op),
+                                color,
+                                shape,
+                                sticky,
+                                hue,
+                                sat,
+                                heal.as_ref(),
+                                strength,
+                                base_ref,
                             )
                         },
-                        c[0], c[1], c[2], c[3], spacing,
+                        c[0],
+                        c[1],
+                        c[2],
+                        c[3],
+                        spacing,
                     );
                 }
             }
@@ -1100,17 +1231,33 @@ impl App {
             // иначе активный слой уже занят mutable-ссылкой.
             let shape_fill = self.params.shape_fill;
             let gsoft = self.params.gradient_soft;
-            let grad_a = if secondary { self.other_color() } else { self.color() };
-            let grad_b = if secondary { self.color() } else { self.other_color() };
+            let grad_a = if secondary {
+                self.other_color()
+            } else {
+                self.color()
+            };
+            let grad_b = if secondary {
+                self.color()
+            } else {
+                self.other_color()
+            };
             self.doc.active_layer_mut().pixels.copy_from_slice(&base);
             let layer = self.doc.active_layer_mut();
             let (sx, sy) = self.stroke_start;
             match tool {
-                Tool::Line => raster::brush_line(layer, w, h, sx, sy, p.0, p.1, p2.0, p2.1, color, p2.2),
-                Tool::Rect => raster::rect(layer, w, h, sx, sy, p.0, p.1, shape_fill, p2.0, p2.1, color, p2.2),
-                Tool::Ellipse => raster::ellipse(layer, w, h, sx, sy, p.0, p.1, shape_fill, p2.0, p2.1, color, p2.2),
+                Tool::Line => {
+                    raster::brush_line(layer, w, h, sx, sy, p.0, p.1, p2.0, p2.1, color, p2.2)
+                }
+                Tool::Rect => raster::rect(
+                    layer, w, h, sx, sy, p.0, p.1, shape_fill, p2.0, p2.1, color, p2.2,
+                ),
+                Tool::Ellipse => raster::ellipse(
+                    layer, w, h, sx, sy, p.0, p.1, shape_fill, p2.0, p2.1, color, p2.2,
+                ),
                 // Градиент идёт от выбранного цвета ко второму
-                Tool::Gradient => raster::gradient(layer, w, h, sx, sy, p.0, p.1, grad_a, grad_b, p2.2, gsoft),
+                Tool::Gradient => {
+                    raster::gradient(layer, w, h, sx, sy, p.0, p.1, grad_a, grad_b, p2.2, gsoft)
+                }
                 _ => {}
             }
         }
@@ -1127,14 +1274,32 @@ impl App {
         if let Some(before) = self.mask_base.take() {
             let after = self.doc.layers[self.doc.active].mask.clone();
             if Some(before.clone()) != after {
-                let name = if self.tool == Tool::Eraser { "Ластик по маске" } else { "Кисть по маске" };
-                self.history.push(name, Action::Mask { layer: self.doc.active, before: Some(before), after });
+                let name = if self.tool == Tool::Eraser {
+                    "Ластик по маске"
+                } else {
+                    "Кисть по маске"
+                };
+                self.history.push(
+                    name,
+                    Action::Mask {
+                        layer: self.doc.active,
+                        before: Some(before),
+                        after,
+                    },
+                );
             }
         } else if let Some(before) = self.stroke_base.take() {
             let after = self.doc.layers[self.doc.active].pixels.clone();
             if before != after {
                 // Название шага — по инструменту, которым рисовали.
-                self.history.push(self.tool.name(), Action::Pixels { layer: self.doc.active, before, after });
+                self.history.push(
+                    self.tool.name(),
+                    Action::Pixels {
+                        layer: self.doc.active,
+                        before,
+                        after,
+                    },
+                );
             }
         }
         self.doc.touch();
@@ -1152,7 +1317,11 @@ impl App {
             self.notify("Слой заблокирован");
             return;
         }
-        self.text = Some(TextDraft { x: p.0, y: p.1, buf: String::new() });
+        self.text = Some(TextDraft {
+            x: p.0,
+            y: p.1,
+            buf: String::new(),
+        });
     }
 
     /// Ввод символа в незавершённый текст.
@@ -1197,7 +1366,14 @@ impl App {
         }
         let after = self.doc.layers[self.doc.active].pixels.clone();
         if before != after {
-            self.history.push("Текст", Action::Pixels { layer: self.doc.active, before, after });
+            self.history.push(
+                "Текст",
+                Action::Pixels {
+                    layer: self.doc.active,
+                    before,
+                    after,
+                },
+            );
             self.doc.touch();
             self.dirty = true;
             self.notify(&format!("Текст: {} символов", t.buf.chars().count()));
@@ -1256,11 +1432,22 @@ impl App {
                 raster::clear_rect(layer, w, h, s);
                 let after = self.doc.layers[self.doc.active].pixels.clone();
                 if before != after {
-                    self.history.push("Вырезано", Action::Pixels { layer: self.doc.active, before, after });
+                    self.history.push(
+                        "Вырезано",
+                        Action::Pixels {
+                            layer: self.doc.active,
+                            before,
+                            after,
+                        },
+                    );
                     self.doc.touch();
                     self.dirty = true;
                 }
-                self.floating = Some(Floating { data, x: s.x, y: s.y });
+                self.floating = Some(Floating {
+                    data,
+                    x: s.x,
+                    y: s.y,
+                });
                 self.float_dirty = true;
                 self.sel_drag = SelDrag::Move;
                 self.float_moved = false;
@@ -1287,11 +1474,7 @@ impl App {
                 }
                 if self.tool == Tool::EllipseSelect {
                     if let Some(s) = self.selection {
-                        self.set_sel_mask(raster::ellipse_mask(
-                            self.doc.width,
-                            self.doc.height,
-                            s,
-                        ));
+                        self.set_sel_mask(raster::ellipse_mask(self.doc.width, self.doc.height, s));
                     }
                 }
             }
@@ -1310,14 +1493,19 @@ impl App {
     pub fn poly_click(&mut self, p: (f32, f32)) {
         if self.poly.len() >= 3 {
             let f = self.poly[0];
-            if (p.0 - f.0).abs() < 6.0 / self.zoom.max(0.05) && (p.1 - f.1).abs() < 6.0 / self.zoom.max(0.05) {
+            if (p.0 - f.0).abs() < 6.0 / self.zoom.max(0.05)
+                && (p.1 - f.1).abs() < 6.0 / self.zoom.max(0.05)
+            {
                 self.finish_polygon();
                 return;
             }
         }
         self.poly.push(p);
         self.poly_active = true;
-        self.notify(&format!("Вершин: {} — Enter, чтобы замкнуть", self.poly.len()));
+        self.notify(&format!(
+            "Вершин: {} — Enter, чтобы замкнуть",
+            self.poly.len()
+        ));
     }
 
     /// Замыкает контур и превращает его в выделение.
@@ -1337,10 +1525,16 @@ impl App {
         let y0 = pts.iter().map(|p| p.1).fold(f32::MAX, f32::min);
         let x1 = pts.iter().map(|p| p.0).fold(f32::MIN, f32::max);
         let y1 = pts.iter().map(|p| p.1).fold(f32::MIN, f32::max);
-        self.selection = Some(SelRect { x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+        self.selection = Some(SelRect {
+            x: x0,
+            y: y0,
+            w: x1 - x0,
+            h: y1 - y0,
+        });
         self.notify(&format!(
             "Выделен многоугольник {}×{}",
-            (x1 - x0) as i32, (y1 - y0) as i32
+            (x1 - x0) as i32,
+            (y1 - y0) as i32
         ));
     }
 
@@ -1359,11 +1553,24 @@ impl App {
             return;
         }
         let (w, h) = (self.doc.width, self.doc.height);
-        let mut mask = if add { self.sel_mask.clone().unwrap_or_else(|| vec![0u8; w * h]) } else { vec![0u8; w * h] };
+        let mut mask = if add {
+            self.sel_mask.clone().unwrap_or_else(|| vec![0u8; w * h])
+        } else {
+            vec![0u8; w * h]
+        };
         // Работаем по активному слою: палочка выбирает то, что на слое.
         let tol = self.params.tolerance.clamp(0.0, 255.0) as i32;
         let layer = self.doc.active_layer();
-        raster::wand(layer, &mut mask, w, h, p.0 as i32, p.1 as i32, tol, self.params.contiguous);
+        raster::wand(
+            layer,
+            &mut mask,
+            w,
+            h,
+            p.0 as i32,
+            p.1 as i32,
+            tol,
+            self.params.contiguous,
+        );
         self.set_sel_mask(mask);
         match self.selection {
             Some(s) => self.notify(&format!("Выделено {}×{} пикселей", s.w as i32, s.h as i32)),
@@ -1410,7 +1617,11 @@ impl App {
 
     /// Куда и к чему притянется курсор — считает, ничего не меняя.
     /// Используется и мазком, и подсказкой в интерфейсе.
-    pub fn snap_preview(&self, p: (f32, f32), from: Option<(f32, f32)>) -> Option<((f32, f32), SnapHit)> {
+    pub fn snap_preview(
+        &self,
+        p: (f32, f32),
+        from: Option<(f32, f32)>,
+    ) -> Option<((f32, f32), SnapHit)> {
         let angle_from = if self.snap_angle { from } else { None };
         if !self.snap_guides && !self.snap_grid && angle_from.is_none() {
             return None;
@@ -1428,7 +1639,11 @@ impl App {
                 let v = if *horiz { p.1 } else { p.0 };
                 offer(
                     (v - pos).abs(),
-                    if *horiz { SnapHit::GuideH(*pos) } else { SnapHit::GuideV(*pos) },
+                    if *horiz {
+                        SnapHit::GuideH(*pos)
+                    } else {
+                        SnapHit::GuideV(*pos)
+                    },
                     &mut best,
                 );
             }
@@ -1495,7 +1710,11 @@ impl App {
             // Ластик стирает до прозрачности.
             return [0, 0, 0, 0];
         }
-        let c = if secondary { self.other_color() } else { self.color() };
+        let c = if secondary {
+            self.other_color()
+        } else {
+            self.color()
+        };
         if c[3] == 0 {
             // Прозрачный цветом рисовать нельзя — берём непрозрачный оттенок.
             [c[0], c[1], c[2], 255]
@@ -1505,7 +1724,11 @@ impl App {
     }
 
     fn fill_color(&self, secondary: bool) -> [u8; 4] {
-        let c = if secondary { self.other_color() } else { self.color() };
+        let c = if secondary {
+            self.other_color()
+        } else {
+            self.color()
+        };
         [c[0], c[1], c[2], if c[3] == 0 { 255 } else { c[3] }]
     }
 
@@ -1513,9 +1736,19 @@ impl App {
     fn params_for_stroke(&self) -> (f32, f32, f32) {
         match self.tool {
             Tool::Pencil => (self.params.size.max(1.0), 1.0, self.params.opacity),
-            Tool::Brush | Tool::Eraser => (self.params.size.max(1.0) * 0.5, self.params.hardness, self.params.opacity),
-            Tool::Line | Tool::Rect | Tool::Ellipse => (self.params.size.max(1.0) * 0.5, 1.0, self.params.opacity),
-            _ => (self.params.size.max(1.0) * 0.5, self.params.hardness, self.params.opacity),
+            Tool::Brush | Tool::Eraser => (
+                self.params.size.max(1.0) * 0.5,
+                self.params.hardness,
+                self.params.opacity,
+            ),
+            Tool::Line | Tool::Rect | Tool::Ellipse => {
+                (self.params.size.max(1.0) * 0.5, 1.0, self.params.opacity)
+            }
+            _ => (
+                self.params.size.max(1.0) * 0.5,
+                self.params.hardness,
+                self.params.opacity,
+            ),
         }
     }
 
@@ -1582,7 +1815,10 @@ impl App {
         if steps.is_empty() {
             return;
         }
-        let last_name = steps.last().map(|(s, _)| s.name.clone()).unwrap_or_default();
+        let last_name = steps
+            .last()
+            .map(|(s, _)| s.name.clone())
+            .unwrap_or_default();
         for (s, forward) in steps {
             if forward {
                 self.apply_forward(&s.action);
@@ -1638,7 +1874,12 @@ impl App {
                     }
                 }
             }
-            Action::Merge { top_index, top, under_index, under_before } => {
+            Action::Merge {
+                top_index,
+                top,
+                under_index,
+                under_before,
+            } => {
                 // Возвращаем верхний слой как был и откатываем нижний.
                 let idx = (*top_index).min(self.doc.layers.len());
                 self.doc.layers.insert(idx, (**top).clone());
@@ -1667,7 +1908,10 @@ impl App {
             }
             Action::LayerAdd { index } => {
                 let n = self.doc.layers.len();
-                self.doc.layers.insert((*index).min(n), Layer::new(self.doc.width, self.doc.height, "Слой"));
+                self.doc.layers.insert(
+                    (*index).min(n),
+                    Layer::new(self.doc.width, self.doc.height, "Слой"),
+                );
                 self.doc.active = (*index).min(self.doc.layers.len() - 1);
             }
             Action::LayerDelete { index, .. } => {
@@ -1693,12 +1937,22 @@ impl App {
                 }
             }
             // Повтор объединения: нижний слой снова со слоем сверху.
-            Action::Merge { top_index, top, under_index, .. } => {
+            Action::Merge {
+                top_index,
+                top,
+                under_index,
+                ..
+            } => {
                 let w = self.doc.width;
                 let h = self.doc.height;
                 if let Some(under) = self.doc.layers.get_mut(*under_index) {
                     for i in 0..w * h {
-                        let c = [top.pixels[i * 4], top.pixels[i * 4 + 1], top.pixels[i * 4 + 2], top.pixels[i * 4 + 3]];
+                        let c = [
+                            top.pixels[i * 4],
+                            top.pixels[i * 4 + 1],
+                            top.pixels[i * 4 + 2],
+                            top.pixels[i * 4 + 3],
+                        ];
                         if c[3] == 0 {
                             continue;
                         }
@@ -1723,7 +1977,8 @@ impl App {
         self.end_stroke();
         let n = self.doc.layers.len() + 1;
         let i = self.doc.add_layer(&format!("Слой {}", n));
-        self.history.push("Слой добавлен", Action::LayerAdd { index: i });
+        self.history
+            .push("Слой добавлен", Action::LayerAdd { index: i });
         self.doc.touch();
         self.notify("Слой добавлен");
     }
@@ -1733,7 +1988,8 @@ impl App {
         let a = self.doc.active;
         let i = self.doc.duplicate_layer(a);
         // Отмена дублирования — убрать новый слой, а не добавить копию.
-        self.history.push("Слой продублирован", Action::LayerAdd { index: i });
+        self.history
+            .push("Слой продублирован", Action::LayerAdd { index: i });
         self.doc.touch();
         self.notify("Слой продублирован");
     }
@@ -1742,7 +1998,13 @@ impl App {
         self.end_stroke();
         let a = self.doc.active;
         if let Some(l) = self.doc.delete_layer(a) {
-            self.history.push("Слой удалён", Action::LayerDelete { index: a, layer: Box::new(l) });
+            self.history.push(
+                "Слой удалён",
+                Action::LayerDelete {
+                    index: a,
+                    layer: Box::new(l),
+                },
+            );
             self.doc.touch();
             self.notify("Слой удалён");
         }
@@ -1754,7 +2016,8 @@ impl App {
             return;
         }
         self.doc.move_layer(from, to);
-        self.history.push("Порядок слоёв", Action::LayerMove { from, to });
+        self.history
+            .push("Порядок слоёв", Action::LayerMove { from, to });
         self.notify("Порядок слоёв изменён");
     }
 
@@ -1796,7 +2059,11 @@ impl App {
         let i = self.doc.active;
         let has = self.doc.layers[i].meta.fx.shadow;
         self.set_layer_meta(i, |m| m.fx.shadow = !has);
-        self.notify(if has { "Тень убрана" } else { "Тень включена" });
+        self.notify(if has {
+            "Тень убрана"
+        } else {
+            "Тень включена"
+        });
     }
 
     /// Снимает/ставит обводку активного слоя.
@@ -1804,7 +2071,11 @@ impl App {
         let i = self.doc.active;
         let has = self.doc.layers[i].meta.fx.outline;
         self.set_layer_meta(i, |m| m.fx.outline = !has);
-        self.notify(if has { "Обводка убрана" } else { "Обводка включена" });
+        self.notify(if has {
+            "Обводка убрана"
+        } else {
+            "Обводка включена"
+        });
     }
 
     /// Снимает/ставит свечение активного слоя.
@@ -1812,7 +2083,11 @@ impl App {
         let i = self.doc.active;
         let has = self.doc.layers[i].meta.fx.glow;
         self.set_layer_meta(i, |m| m.fx.glow = !has);
-        self.notify(if has { "Свечение убрано" } else { "Свечение включено" });
+        self.notify(if has {
+            "Свечение убрано"
+        } else {
+            "Свечение включено"
+        });
     }
 
     // --- группы слоёв (папки) ---
@@ -1827,7 +2102,14 @@ impl App {
             self.notify("Для папки нужен слой над активным");
             return;
         }
-        let n = self.doc.layers.iter().filter(|l| l.meta.group.is_some()).count() / 2 + 1;
+        let n = self
+            .doc
+            .layers
+            .iter()
+            .filter(|l| l.meta.group.is_some())
+            .count()
+            / 2
+            + 1;
         let name = format!("Группа {}", n);
         for l in self.doc.layers.iter_mut().skip(a) {
             l.meta.group = Some(name.clone());
@@ -1856,7 +2138,10 @@ impl App {
 
     /// Раскрыта ли папка, чьей шапкой является слой.
     pub fn group_open(&self, index: usize) -> bool {
-        self.doc.layers.get(index).map_or(true, |l| l.meta.group_open)
+        self.doc
+            .layers
+            .get(index)
+            .map_or(true, |l| l.meta.group_open)
     }
 
     /// Раскрытие/сворачивание папки по её шапке.
@@ -1869,7 +2154,12 @@ impl App {
 
     /// Является ли слой шапкой папки: он верхний в своей группе.
     pub fn is_group_header(&self, index: usize) -> bool {
-        let Some(name) = self.doc.layers.get(index).and_then(|l| l.meta.group.clone()) else {
+        let Some(name) = self
+            .doc
+            .layers
+            .get(index)
+            .and_then(|l| l.meta.group.clone())
+        else {
             return false;
         };
         self.doc
@@ -1881,7 +2171,12 @@ impl App {
 
     /// Слои папки: шапка и всё её содержимое (сверху вниз по индексу).
     pub fn group_members(&self, header: usize) -> Vec<usize> {
-        let Some(name) = self.doc.layers.get(header).and_then(|l| l.meta.group.clone()) else {
+        let Some(name) = self
+            .doc
+            .layers
+            .get(header)
+            .and_then(|l| l.meta.group.clone())
+        else {
             return Vec::new();
         };
         let mut out = vec![header];
@@ -1900,7 +2195,12 @@ impl App {
 
     /// Показывается ли слой в панели: содержимое закрытой папки скрыто.
     pub fn layer_visible_in_panel(&self, index: usize) -> bool {
-        let Some(name) = self.doc.layers.get(index).and_then(|l| l.meta.group.clone()) else {
+        let Some(name) = self
+            .doc
+            .layers
+            .get(index)
+            .and_then(|l| l.meta.group.clone())
+        else {
             return true;
         };
         // Идём вверх по индексу до конца группы — там её шапка.
@@ -1923,15 +2223,29 @@ impl App {
         }
         let any_visible = members.iter().any(|i| self.doc.layers[*i].meta.visible);
         let want = !any_visible;
-        let before: Vec<LayerMeta> = members.iter().map(|i| self.doc.layers[*i].meta.clone()).collect();
+        let before: Vec<LayerMeta> = members
+            .iter()
+            .map(|i| self.doc.layers[*i].meta.clone())
+            .collect();
         for i in &members {
             self.doc.layers[*i].meta.visible = want;
         }
-        let after: Vec<LayerMeta> = members.iter().map(|i| self.doc.layers[*i].meta.clone()).collect();
+        let after: Vec<LayerMeta> = members
+            .iter()
+            .map(|i| self.doc.layers[*i].meta.clone())
+            .collect();
         for (k, i) in members.iter().enumerate() {
             self.history.push(
-                if want { "Папка показана" } else { "Папка скрыта" },
-                Action::LayerMeta { index: *i, before: before[k].clone(), after: after[k].clone() },
+                if want {
+                    "Папка показана"
+                } else {
+                    "Папка скрыта"
+                },
+                Action::LayerMeta {
+                    index: *i,
+                    before: before[k].clone(),
+                    after: after[k].clone(),
+                },
             );
         }
         self.doc.touch();
@@ -1955,7 +2269,14 @@ impl App {
         };
         self.doc.layers[index].meta = after.clone();
         self.doc.touch();
-        self.history.push(name, Action::LayerMeta { index, before, after });
+        self.history.push(
+            name,
+            Action::LayerMeta {
+                index,
+                before,
+                after,
+            },
+        );
     }
 
     pub fn merge_down(&mut self) {
@@ -1973,7 +2294,12 @@ impl App {
         let under_before = self.doc.layers[under_index].pixels.clone();
         let under = &mut self.doc.layers[under_index];
         for i in 0..w * h {
-            let c = [top.pixels[i * 4], top.pixels[i * 4 + 1], top.pixels[i * 4 + 2], top.pixels[i * 4 + 3]];
+            let c = [
+                top.pixels[i * 4],
+                top.pixels[i * 4 + 1],
+                top.pixels[i * 4 + 2],
+                top.pixels[i * 4 + 3],
+            ];
             if c[3] == 0 {
                 continue;
             }
@@ -2014,7 +2340,11 @@ impl App {
         }
         let on = !self.doc.layers[a].meta.clipped;
         self.set_layer_meta(a, |m| m.clipped = on);
-        self.notify(if on { "Слой прижат к нижнему" } else { "Слой свободен" });
+        self.notify(if on {
+            "Слой прижат к нижнему"
+        } else {
+            "Слой свободен"
+        });
     }
 
     /// Создаёт маску активного слоя из текущего выделения.
@@ -2051,8 +2381,16 @@ impl App {
         layer.mask = Some(mask);
         layer.mask_on = true;
         self.history.push(
-            if self.selection.is_some() { "Маска из выделения" } else { "Маска слоя" },
-            Action::Mask { layer: self.doc.active, before, after: self.doc.layers[self.doc.active].mask.clone() },
+            if self.selection.is_some() {
+                "Маска из выделения"
+            } else {
+                "Маска слоя"
+            },
+            Action::Mask {
+                layer: self.doc.active,
+                before,
+                after: self.doc.layers[self.doc.active].mask.clone(),
+            },
         );
         self.edit_mask = true;
         self.doc.touch();
@@ -2096,8 +2434,16 @@ impl App {
         }
         self.doc.active_layer_mut().mask = Some(mask.clone());
         self.history.push(
-            if white { "Маска: белое" } else { "Маска: чёрное" },
-            Action::Mask { layer: self.doc.active, before, after: Some(mask) },
+            if white {
+                "Маска: белое"
+            } else {
+                "Маска: чёрное"
+            },
+            Action::Mask {
+                layer: self.doc.active,
+                before,
+                after: Some(mask),
+            },
         );
         self.doc.touch();
         self.dirty = true;
@@ -2113,7 +2459,14 @@ impl App {
         let mut after = before.clone().unwrap_or_default();
         after.iter_mut().for_each(|v| *v = 255 - *v);
         self.doc.active_layer_mut().mask = Some(after.clone());
-        self.history.push("Инверсия маски", Action::Mask { layer: self.doc.active, before, after: Some(after) });
+        self.history.push(
+            "Инверсия маски",
+            Action::Mask {
+                layer: self.doc.active,
+                before,
+                after: Some(after),
+            },
+        );
         self.doc.touch();
         self.dirty = true;
     }
@@ -2129,7 +2482,11 @@ impl App {
         self.doc.layers[idx].mask_on = !self.doc.layers[idx].mask_on;
         self.doc.touch();
         self.dirty = true;
-        self.notify(if self.doc.layers[idx].mask_on { "Маска включена" } else { "Маска выключена" });
+        self.notify(if self.doc.layers[idx].mask_on {
+            "Маска включена"
+        } else {
+            "Маска выключена"
+        });
     }
 
     /// Удаляет маску слоя (с отменой).
@@ -2143,7 +2500,14 @@ impl App {
         }
         self.doc.layers[idx].mask = None;
         self.doc.layers[idx].mask_on = true;
-        self.history.push("Удалить маску", Action::Mask { layer: idx, before, after: None });
+        self.history.push(
+            "Удалить маску",
+            Action::Mask {
+                layer: idx,
+                before,
+                after: None,
+            },
+        );
         self.edit_mask = false;
         self.doc.touch();
         self.dirty = true;
@@ -2173,15 +2537,30 @@ impl App {
             return;
         }
         self.edit_mask = on && self.doc.active_layer().mask.is_some();
-        self.notify(if self.edit_mask { "Рисование по маске" } else { "Рисование по слою" });
+        self.notify(if self.edit_mask {
+            "Рисование по маске"
+        } else {
+            "Рисование по слою"
+        });
     }
 
     pub fn clear_layer(&mut self) {
         self.end_stroke();
         let before = self.doc.active_layer().pixels.clone();
-        self.doc.active_layer_mut().pixels.iter_mut().for_each(|v| *v = 0);
+        self.doc
+            .active_layer_mut()
+            .pixels
+            .iter_mut()
+            .for_each(|v| *v = 0);
         let after = self.doc.layers[self.doc.active].pixels.clone();
-        self.history.push("Слой очищен", Action::Pixels { layer: self.doc.active, before, after });
+        self.history.push(
+            "Слой очищен",
+            Action::Pixels {
+                layer: self.doc.active,
+                before,
+                after,
+            },
+        );
         self.doc.touch();
         self.dirty = true;
         self.notify("Слой очищен");
@@ -2221,7 +2600,14 @@ impl App {
         raster::adjust(layer, bright, contrast, saturate, hue);
         let after = self.doc.layers[self.doc.active].pixels.clone();
         if before != after {
-            self.history.push("Фильтры слоя", Action::Pixels { layer: self.doc.active, before, after });
+            self.history.push(
+                "Фильтры слоя",
+                Action::Pixels {
+                    layer: self.doc.active,
+                    before,
+                    after,
+                },
+            );
             self.doc.touch();
             self.dirty = true;
             self.notify("Фильтры применены к слою");
@@ -2268,7 +2654,9 @@ impl App {
             self.update_color();
             return;
         }
-        let Some(base) = self.curve_base.as_ref() else { return };
+        let Some(base) = self.curve_base.as_ref() else {
+            return;
+        };
         let lut = self.corr_lut();
         let i = self.doc.active;
         self.doc.layers[i].pixels.copy_from_slice(base);
@@ -2308,7 +2696,9 @@ impl App {
 
     /// Пересчитывает слой для окон без таблицы: тон/насыщенность и баланс.
     pub fn update_color(&mut self) {
-        let Some(base) = self.curve_base.as_ref() else { return };
+        let Some(base) = self.curve_base.as_ref() else {
+            return;
+        };
         let i = self.doc.active;
         self.doc.layers[i].pixels.copy_from_slice(base);
         let (corr, ch, hue, sat, light, bal, lut) = (
@@ -2387,7 +2777,9 @@ impl App {
         self.levels_dialog = false;
         self.hsv_dialog = false;
         self.balance_dialog = false;
-        let Some(base) = self.curve_base.take() else { return };
+        let Some(base) = self.curve_base.take() else {
+            return;
+        };
         let i = self.doc.active;
         if !save {
             self.doc.layers[i].pixels = base;
@@ -2404,7 +2796,14 @@ impl App {
                 CorrKind::HueSat => "Тон и насыщенность",
                 CorrKind::Balance => "Цветовой баланс",
             };
-            self.history.push(name, Action::Pixels { layer: i, before: base, after });
+            self.history.push(
+                name,
+                Action::Pixels {
+                    layer: i,
+                    before: base,
+                    after,
+                },
+            );
             self.doc.touch();
             self.dirty = true;
             self.notify(&format!("{} применены к слою", name));
@@ -2462,7 +2861,9 @@ impl App {
         if !self.dirty {
             return false;
         }
-        let Some(path) = autosave_path() else { return false };
+        let Some(path) = autosave_path() else {
+            return false;
+        };
         match crate::project::save(&self.doc, &path.to_string_lossy()) {
             Ok(()) => {
                 self.last_autosave = Instant::now();
@@ -2479,8 +2880,12 @@ impl App {
 
     /// Есть ли непрочитанное автосохранение (файл свежее пометки).
     pub fn autosave_pending() -> bool {
-        let (Some(path), Some(mark)) = (autosave_path(), autosave_marker()) else { return false };
-        let Ok(meta) = std::fs::metadata(&path) else { return false };
+        let (Some(path), Some(mark)) = (autosave_path(), autosave_marker()) else {
+            return false;
+        };
+        let Ok(meta) = std::fs::metadata(&path) else {
+            return false;
+        };
         if let Ok(m) = std::fs::metadata(&mark) {
             if let (Ok(a), Ok(b)) = (meta.modified(), m.modified()) {
                 if a <= b {
@@ -2494,7 +2899,9 @@ impl App {
     /// Открывает автосохранение как обычный документ и ставит пометку,
     /// чтобы при следующем запуске его не предлагали снова.
     pub fn restore_autosave(&mut self) -> Result<(), String> {
-        let Some(path) = autosave_path() else { return Err("нет папки автосохранения".to_string()) };
+        let Some(path) = autosave_path() else {
+            return Err("нет папки автосохранения".to_string());
+        };
         self.open_project(&path.to_string_lossy())?;
         if let Some(mark) = autosave_marker() {
             let _ = std::fs::write(mark, b"1");
@@ -2559,7 +2966,12 @@ impl App {
             start_w: (x1 - x0) as f32,
             start_h: (y1 - y0) as f32,
             rot_start: [(0.0, 0.0); 4],
-            shown: [(x0 as f32, y0 as f32), (x1 as f32, y0 as f32), (x1 as f32, y1 as f32), (x0 as f32, y1 as f32)],
+            shown: [
+                (x0 as f32, y0 as f32),
+                (x1 as f32, y0 as f32),
+                (x1 as f32, y1 as f32),
+                (x0 as f32, y1 as f32),
+            ],
         });
         self.floating = None;
         self.sel_drag = SelDrag::None;
@@ -2568,7 +2980,9 @@ impl App {
     /// Перерисовывает слой по текущему положению рамки трансформации.
     /// Вызывается каждый кадр, пока трансформация активна.
     pub fn transform_preview(&mut self) {
-        let Some(t) = self.transform.as_mut() else { return };
+        let Some(t) = self.transform.as_mut() else {
+            return;
+        };
         if t.shown == t.pts {
             return;
         }
@@ -2598,7 +3012,9 @@ impl App {
 
     /// Двигает трансформацию за угол, за рамку или вращает.
     pub fn transform_drag(&mut self, p: (f32, f32), grab: TransformGrab) {
-        let Some(t) = self.transform.as_mut() else { return };
+        let Some(t) = self.transform.as_mut() else {
+            return;
+        };
         match grab {
             TransformGrab::Corner(i) => {
                 t.pts[i] = p;
@@ -2628,7 +3044,9 @@ impl App {
 
     /// Запоминает опорную точку и угол при начале перетаскивания.
     pub fn transform_grab_begin(&mut self, p: (f32, f32), grab: TransformGrab) {
-        let Some(t) = self.transform.as_mut() else { return };
+        let Some(t) = self.transform.as_mut() else {
+            return;
+        };
         t.grab = grab;
         t.anchor = p;
         t.rot_start = t.pts;
@@ -2645,30 +3063,50 @@ impl App {
 
     /// Вписывает трансформацию в исходный прямоугольник (кнопка «Вписать»).
     pub fn transform_fit(&mut self) {
-        let Some(t) = self.transform.as_mut() else { return };
+        let Some(t) = self.transform.as_mut() else {
+            return;
+        };
         let c = t.center();
         let (w, h) = (t.start_w, t.start_h);
-        t.pts = [(c.0, c.1), (c.0 + w, c.1), (c.0 + w, c.1 + h), (c.0, c.1 + h)];
+        t.pts = [
+            (c.0, c.1),
+            (c.0 + w, c.1),
+            (c.0 + w, c.1 + h),
+            (c.0, c.1 + h),
+        ];
     }
 
     /// Применяет трансформацию к слою (Enter).
     pub fn transform_commit(&mut self) {
-        let Some(t) = self.transform.take() else { return };
+        let Some(t) = self.transform.take() else {
+            return;
+        };
         // Кадр уже нарисован transform_preview, значит слой содержит результат.
         let after = self.doc.active_layer().pixels.clone();
         if t.before != after {
             self.history.push(
                 "Трансформация",
-                Action::Pixels { layer: self.doc.active, before: t.before.clone(), after },
+                Action::Pixels {
+                    layer: self.doc.active,
+                    before: t.before.clone(),
+                    after,
+                },
             );
             self.doc.touch();
             self.dirty = true;
         }
         // Рамка переезжает вместе с содержимым.
         let c = t.center();
-        let w2 = (((t.pts[1].0 - t.pts[0].0).powi(2) + (t.pts[1].1 - t.pts[0].1).powi(2)).sqrt()) as f32;
-        let h2 = (((t.pts[3].0 - t.pts[0].0).powi(2) + (t.pts[3].1 - t.pts[0].1).powi(2)).sqrt()) as f32;
-        self.selection = Some(SelRect { x: c.0 - w2 / 2.0, y: c.1 - h2 / 2.0, w: w2, h: h2 });
+        let w2 =
+            (((t.pts[1].0 - t.pts[0].0).powi(2) + (t.pts[1].1 - t.pts[0].1).powi(2)).sqrt()) as f32;
+        let h2 =
+            (((t.pts[3].0 - t.pts[0].0).powi(2) + (t.pts[3].1 - t.pts[0].1).powi(2)).sqrt()) as f32;
+        self.selection = Some(SelRect {
+            x: c.0 - w2 / 2.0,
+            y: c.1 - h2 / 2.0,
+            w: w2,
+            h: h2,
+        });
         self.notify("Трансформация применена");
     }
 
@@ -2684,7 +3122,9 @@ impl App {
     /// Что схватили под курсором: угол рамки, перенос или поворот.
     /// Точка сравнивается в экранных координатах.
     pub fn transform_grab_at(&self, screen: (f32, f32)) -> TransformGrab {
-        let Some(t) = self.transform.as_ref() else { return TransformGrab::None };
+        let Some(t) = self.transform.as_ref() else {
+            return TransformGrab::None;
+        };
         const HANDLE: f32 = 7.0;
         for (i, p) in t.pts.iter().enumerate() {
             let s = self.canvas_to_screen(p.0, p.1);
@@ -2741,7 +3181,10 @@ impl App {
                 CanvasOp::MirrorH => "Холст слева направо",
                 CanvasOp::MirrorV => "Холст сверху вниз",
             },
-            Action::Document { before: Box::new(before), after: Box::new(after) },
+            Action::Document {
+                before: Box::new(before),
+                after: Box::new(after),
+            },
         );
         self.selection = None;
         self.floating = None;
@@ -2758,11 +3201,23 @@ impl App {
         self.doc.flip_layer(i, horizontal);
         let after = self.doc.layers[i].pixels.clone();
         self.history.push(
-            if horizontal { "Слой отражён по горизонтали" } else { "Слой отражён по вертикали" },
-            Action::Pixels { layer: i, before, after },
+            if horizontal {
+                "Слой отражён по горизонтали"
+            } else {
+                "Слой отражён по вертикали"
+            },
+            Action::Pixels {
+                layer: i,
+                before,
+                after,
+            },
         );
         self.dirty = true;
-        self.notify(if horizontal { "Слой отражён по горизонтали" } else { "Слой отражён по вертикали" });
+        self.notify(if horizontal {
+            "Слой отражён по горизонтали"
+        } else {
+            "Слой отражён по вертикали"
+        });
     }
 
     /// Обрезает холст по выделению.
@@ -2783,7 +3238,10 @@ impl App {
         self.history = History::new(40);
         self.dirty = true;
         self.fit_pending = true;
-        self.notify(&format!("Холст обрезан: {}×{}", self.doc.width, self.doc.height));
+        self.notify(&format!(
+            "Холст обрезан: {}×{}",
+            self.doc.width, self.doc.height
+        ));
     }
 
     /// Обрезает пустые поля по краям содержимого.
@@ -2805,7 +3263,10 @@ impl App {
 
     pub fn new_document(&mut self, w: usize, h: usize) {
         self.end_stroke();
-        *self = Self { canvas_rect: self.canvas_rect, ..Self::new() };
+        *self = Self {
+            canvas_rect: self.canvas_rect,
+            ..Self::new()
+        };
         self.doc = Document::new(w, h);
         self.doc.layers[0].meta.name = "Фон".to_string();
         self.doc.layers[0].fill([255, 255, 255, 255]);
@@ -2869,7 +3330,9 @@ impl App {
         use crate::renderer::{THUMB_ATLAS, THUMB_CELL, THUMB_COLS};
         let mut atlas = vec![0u8; THUMB_ATLAS * THUMB_ATLAS * 4];
         for (idx, layer) in self.doc.layers.iter().enumerate() {
-            let Some(mask) = layer.mask.as_ref() else { continue };
+            let Some(mask) = layer.mask.as_ref() else {
+                continue;
+            };
             let col = (idx % THUMB_COLS) * THUMB_CELL;
             let row = (idx / THUMB_COLS) * THUMB_CELL;
             let sw = self.doc.width.max(1) as f32;
@@ -2913,7 +3376,12 @@ impl App {
         let col = (idx % THUMB_COLS) * THUMB_CELL;
         let row = (idx / THUMB_COLS) * THUMB_CELL;
         let a = THUMB_ATLAS as f32;
-        [col as f32 / a, row as f32 / a, (col + THUMB_CELL) as f32 / a, (row + THUMB_CELL) as f32 / a]
+        [
+            col as f32 / a,
+            row as f32 / a,
+            (col + THUMB_CELL) as f32 / a,
+            (row + THUMB_CELL) as f32 / a,
+        ]
     }
 
     pub fn resize_canvas(&mut self, w: usize, h: usize) {
@@ -3020,11 +3488,20 @@ impl App {
             .file_stem()
             .map(|s| s.to_string_lossy().into_owned())
             .unwrap_or_else(|| "Слой".to_string());
-        layer.meta.name = if name.is_empty() { "Слой".to_string() } else { name };
+        layer.meta.name = if name.is_empty() {
+            "Слой".to_string()
+        } else {
+            name
+        };
         // Новый слой кладём наверх и делаем активным.
         self.doc.layers.push(layer);
         self.doc.active = self.doc.layers.len() - 1;
-        self.history.push("Импорт слоя", Action::LayerAdd { index: self.doc.active });
+        self.history.push(
+            "Импорт слоя",
+            Action::LayerAdd {
+                index: self.doc.active,
+            },
+        );
         self.doc.touch();
         self.dirty = true;
         self.notify(&format!("Импортирован слой {}×{}", iw, ih));
@@ -3140,7 +3617,12 @@ impl App {
             .collect();
         let bytes = crate::psd::write_layers(w, h, &self.doc.composite, &out);
         std::fs::write(path, bytes).map_err(|e| e.to_string())?;
-        self.notify(&format!("Экспорт в PSD готов: {}×{}, слоёв: {}", w, h, out.len()));
+        self.notify(&format!(
+            "Экспорт в PSD готов: {}×{}, слоёв: {}",
+            w,
+            h,
+            out.len()
+        ));
         Ok(())
     }
 
@@ -3165,7 +3647,8 @@ impl App {
             }
         }
         let mut out = Vec::new();
-        let mut enc = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, quality.clamp(1, 100));
+        let mut enc =
+            image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, quality.clamp(1, 100));
         enc.encode_image(&rgb).map_err(|e| e.to_string())?;
         std::fs::write(path, out).map_err(|e| e.to_string())?;
         self.notify("Экспорт JPEG готов");
@@ -3239,12 +3722,19 @@ impl App {
         }
         let (w, h) = (self.doc.width, self.doc.height);
         // Без маски выделение — это прямоугольник: разворачиваем именно его.
-        let mut mask = self.sel_mask.clone().unwrap_or_else(|| self.rect_mask(w, h));
+        let mut mask = self
+            .sel_mask
+            .clone()
+            .unwrap_or_else(|| self.rect_mask(w, h));
         for v in mask.iter_mut() {
             *v = 255 - *v;
         }
         self.set_sel_mask(mask);
-        self.notify(if self.selection.is_some() { "Выделение инвертировано" } else { "Выделение пустое" });
+        self.notify(if self.selection.is_some() {
+            "Выделение инвертировано"
+        } else {
+            "Выделение пустое"
+        });
     }
 
     /// Растушёвывает выделение на `px` пикселей: край становится мягким.
@@ -3254,7 +3744,10 @@ impl App {
             return;
         }
         let (w, h) = (self.doc.width, self.doc.height);
-        let mut mask = self.sel_mask.clone().unwrap_or_else(|| self.rect_mask(w, h));
+        let mut mask = self
+            .sel_mask
+            .clone()
+            .unwrap_or_else(|| self.rect_mask(w, h));
         raster::mask_blur(&mut mask, w, h, px);
         self.set_sel_mask(mask);
         self.notify(&format!("Растушёвка: {}", px.round() as i32));
@@ -3267,10 +3760,17 @@ impl App {
             return;
         }
         let (w, h) = (self.doc.width, self.doc.height);
-        let mut mask = self.sel_mask.clone().unwrap_or_else(|| self.rect_mask(w, h));
+        let mut mask = self
+            .sel_mask
+            .clone()
+            .unwrap_or_else(|| self.rect_mask(w, h));
         raster::mask_grow(&mut mask, w, h, px);
         self.set_sel_mask(mask);
-        self.notify(if px > 0.0 { "Выделение расширено" } else { "Выделение сужено" });
+        self.notify(if px > 0.0 {
+            "Выделение расширено"
+        } else {
+            "Выделение сужено"
+        });
     }
 
     /// Маска текущего выделения: прямоугольник — как есть, иначе уже готовая.
@@ -3330,7 +3830,14 @@ impl App {
         raster::clear_rect(layer, w, h, s);
         let after = self.doc.layers[self.doc.active].pixels.clone();
         self.clipboard = Some(data);
-        self.history.push("Вырезано", Action::Pixels { layer: self.doc.active, before, after });
+        self.history.push(
+            "Вырезано",
+            Action::Pixels {
+                layer: self.doc.active,
+                before,
+                after,
+            },
+        );
         self.doc.touch();
         self.dirty = true;
         self.notify("Вырезано");
@@ -3389,7 +3896,14 @@ impl App {
         }
         let after = self.doc.layers[self.doc.active].pixels.clone();
         if before != after {
-            self.history.push("Удаление выделения", Action::Pixels { layer: self.doc.active, before, after });
+            self.history.push(
+                "Удаление выделения",
+                Action::Pixels {
+                    layer: self.doc.active,
+                    before,
+                    after,
+                },
+            );
             self.doc.touch();
             self.dirty = true;
             self.notify("Выделение удалено");
@@ -3413,14 +3927,23 @@ impl App {
 
     /// Закрепляет плавающий фрагмент на активном слое.
     pub fn floating_commit(&mut self) {
-        let Some(f) = self.floating.take() else { return };
+        let Some(f) = self.floating.take() else {
+            return;
+        };
         let before = self.doc.active_layer().pixels.clone();
         let (w, h) = (self.doc.width, self.doc.height);
         let layer = self.doc.active_layer_mut();
         raster::blit_rect(layer, w, h, &f.data, f.x, f.y);
         let after = self.doc.layers[self.doc.active].pixels.clone();
         if before != after {
-            self.history.push("Вставка выделения", Action::Pixels { layer: self.doc.active, before, after });
+            self.history.push(
+                "Вставка выделения",
+                Action::Pixels {
+                    layer: self.doc.active,
+                    before,
+                    after,
+                },
+            );
         }
         if let Some(s) = self.selection.as_mut() {
             s.x = f.x;
@@ -3470,7 +3993,14 @@ impl App {
         }
         let after = self.doc.layers[self.doc.active].pixels.clone();
         if before != after {
-            self.history.push("Заливка выделения", Action::Pixels { layer: self.doc.active, before, after });
+            self.history.push(
+                "Заливка выделения",
+                Action::Pixels {
+                    layer: self.doc.active,
+                    before,
+                    after,
+                },
+            );
         }
         self.doc.touch();
         self.dirty = true;
@@ -3491,20 +4021,31 @@ mod tests {
         app.begin_stroke((32.0, 32.0), false);
         app.move_stroke((40.0, 40.0), false);
         app.end_stroke();
-        assert_ne!(app.doc.layers[app.doc.active].pixels, before, "мазок ничего не нарисовал");
+        assert_ne!(
+            app.doc.layers[app.doc.active].pixels, before,
+            "мазок ничего не нарисовал"
+        );
 
         app.undo();
-        assert_eq!(app.doc.layers[app.doc.active].pixels, before, "отмена не вернула слой");
+        assert_eq!(
+            app.doc.layers[app.doc.active].pixels, before,
+            "отмена не вернула слой"
+        );
 
         app.redo();
-        assert_ne!(app.doc.layers[app.doc.active].pixels, before, "повтор не вернул мазок");
+        assert_ne!(
+            app.doc.layers[app.doc.active].pixels, before,
+            "повтор не вернул мазок"
+        );
     }
 
     #[test]
     fn eyedropper_picks_active_layer_color() {
         let mut app = App::new();
         app.doc.resize(32, 32);
-        app.doc.active_layer_mut().set(32, 10, 10, [12, 34, 56, 255]);
+        app.doc
+            .active_layer_mut()
+            .set(32, 10, 10, [12, 34, 56, 255]);
         app.tool = Tool::Eyedropper;
         app.begin_stroke((10.0, 10.0), false);
         assert_eq!(app.primary, [12, 34, 56, 255]);
@@ -3514,7 +4055,12 @@ mod tests {
     fn transform_moves_selection_and_keeps_history() {
         let mut app = app_with_blank(32, 32);
         app.doc.active_layer_mut().set(32, 8, 8, [255, 0, 0, 255]);
-        app.selection = Some(SelRect { x: 6.0, y: 6.0, w: 6.0, h: 6.0 });
+        app.selection = Some(SelRect {
+            x: 6.0,
+            y: 6.0,
+            w: 6.0,
+            h: 6.0,
+        });
         app.begin_transform();
         assert!(app.transform.is_some(), "трансформация не началась");
         // Сдвигаем рамку на 10 пикселей вправо и вниз.
@@ -3526,14 +4072,24 @@ mod tests {
         app.transform_preview();
         let l = &app.doc.layers[app.doc.active];
         assert_eq!(l.get(32, 8, 8)[3], 0, "на старом месте должно быть пусто");
-        assert_eq!(l.get(32, 18, 18), [255, 0, 0, 255], "пиксель переехал вместе с рамкой");
+        assert_eq!(
+            l.get(32, 18, 18),
+            [255, 0, 0, 255],
+            "пиксель переехал вместе с рамкой"
+        );
         app.transform_commit();
         assert!(app.transform.is_none());
         let after = app.doc.layers[app.doc.active].pixels.clone();
         app.undo();
-        assert_ne!(app.doc.layers[app.doc.active].pixels, after, "отмена вернула картинку на место");
+        assert_ne!(
+            app.doc.layers[app.doc.active].pixels, after,
+            "отмена вернула картинку на место"
+        );
         app.redo();
-        assert_eq!(app.doc.layers[app.doc.active].pixels, after, "повтор не вернул сдвиг");
+        assert_eq!(
+            app.doc.layers[app.doc.active].pixels, after,
+            "повтор не вернул сдвиг"
+        );
     }
 
     #[test]
@@ -3541,21 +4097,37 @@ mod tests {
         let mut app = app_with_blank(32, 32);
         app.doc.active_layer_mut().fill([7, 7, 7, 255]);
         let before = app.doc.layers[0].pixels.clone();
-        app.selection = Some(SelRect { x: 4.0, y: 4.0, w: 8.0, h: 8.0 });
+        app.selection = Some(SelRect {
+            x: 4.0,
+            y: 4.0,
+            w: 8.0,
+            h: 8.0,
+        });
         app.begin_transform();
         let t = app.transform.as_mut().unwrap();
         t.pts = [(20.0, 20.0), (28.0, 20.0), (28.0, 28.0), (20.0, 28.0)];
         app.transform_preview();
-        assert_ne!(app.doc.layers[0].pixels, before, "предпросмотр должен был что-то изменить");
+        assert_ne!(
+            app.doc.layers[0].pixels, before,
+            "предпросмотр должен был что-то изменить"
+        );
         app.transform_cancel();
-        assert_eq!(app.doc.layers[0].pixels, before, "отмена обязана вернуть слой целиком");
+        assert_eq!(
+            app.doc.layers[0].pixels, before,
+            "отмена обязана вернуть слой целиком"
+        );
     }
 
     #[test]
     fn transform_rotates_around_center() {
         let mut app = app_with_blank(40, 40);
         app.doc.active_layer_mut().fill([255, 255, 255, 255]);
-        app.selection = Some(SelRect { x: 10.0, y: 10.0, w: 10.0, h: 10.0 });
+        app.selection = Some(SelRect {
+            x: 10.0,
+            y: 10.0,
+            w: 10.0,
+            h: 10.0,
+        });
         app.begin_transform();
         let c = app.transform.as_ref().unwrap().center();
         // Захват в 30 px правее центра и поворот на 90°.
@@ -3576,7 +4148,10 @@ mod tests {
         let mut app = app_with_blank(16, 16);
         app.selection = None;
         app.begin_transform();
-        assert!(app.transform.is_none(), "без выделения трансформация не начинается");
+        assert!(
+            app.transform.is_none(),
+            "без выделения трансформация не начинается"
+        );
     }
 
     #[test]
@@ -3588,8 +4163,16 @@ mod tests {
         // Активен слой 1: он и слой над ним (2) становятся папкой «Группа 1».
         app.doc.active = 1;
         app.make_group();
-        assert_eq!(app.doc.layers[2].meta.group.as_deref(), Some("Группа 1"), "слой 2 в папке");
-        assert_eq!(app.doc.layers[1].meta.group.as_deref(), Some("Группа 1"), "слой 1 в папке");
+        assert_eq!(
+            app.doc.layers[2].meta.group.as_deref(),
+            Some("Группа 1"),
+            "слой 2 в папке"
+        );
+        assert_eq!(
+            app.doc.layers[1].meta.group.as_deref(),
+            Some("Группа 1"),
+            "слой 1 в папке"
+        );
         assert_eq!(app.doc.layers[0].meta.group, None, "нижний слой вне папки");
         assert!(app.is_group_header(2), "слой 2 — шапка папки");
         assert!(!app.is_group_header(1), "слой 1 — содержимое папки");
@@ -3603,9 +4186,15 @@ mod tests {
         // Слой 2 — шапка, слой 1 — её содержимое.
         app.doc.active = 1;
         app.make_group();
-        assert!(app.layer_visible_in_panel(1), "открытая папка показывает содержимое");
+        assert!(
+            app.layer_visible_in_panel(1),
+            "открытая папка показывает содержимое"
+        );
         app.toggle_group(2);
-        assert!(!app.layer_visible_in_panel(1), "сворачивание прячет содержимое");
+        assert!(
+            !app.layer_visible_in_panel(1),
+            "сворачивание прячет содержимое"
+        );
         assert!(app.layer_visible_in_panel(2), "шапка папки остаётся видна");
         app.toggle_group(2);
         assert!(app.layer_visible_in_panel(1), "разворачивание возвращает");
@@ -3620,7 +4209,10 @@ mod tests {
         app.doc.active = 1;
         app.make_group();
         app.ungroup();
-        assert!(app.doc.layers.iter().all(|l| l.meta.group.is_none()), "папка распущена");
+        assert!(
+            app.doc.layers.iter().all(|l| l.meta.group.is_none()),
+            "папка распущена"
+        );
     }
     #[test]
     fn group_visibility_toggles_all_members() {
@@ -3633,7 +4225,11 @@ mod tests {
         assert_eq!(members, vec![2, 1], "в папке шапка и слой под ней");
         app.toggle_group_visibility(2);
         for i in &members {
-            assert!(!app.doc.layers[*i].meta.visible, "слой {} скрыт вместе с папкой", i);
+            assert!(
+                !app.doc.layers[*i].meta.visible,
+                "слой {} скрыт вместе с папкой",
+                i
+            );
         }
         app.toggle_group_visibility(2);
         for i in &members {
@@ -3645,7 +4241,12 @@ mod tests {
     fn mask_from_selection_shows_only_selected_part() {
         let mut app = app_with_blank(32, 32);
         app.doc.active_layer_mut().fill([255, 0, 0, 255]);
-        app.selection = Some(SelRect { x: 8.0, y: 8.0, w: 8.0, h: 8.0 });
+        app.selection = Some(SelRect {
+            x: 8.0,
+            y: 8.0,
+            w: 8.0,
+            h: 8.0,
+        });
         app.add_mask_from_selection();
         app.doc.ensure_composite();
         let c = &app.doc.composite;
@@ -3660,7 +4261,12 @@ mod tests {
         let mut app = app_with_blank(32, 32);
         app.doc.active_layer_mut().fill([10, 10, 10, 255]);
         // Маска открыта только слева — кистью открываем правую половину.
-        app.selection = Some(SelRect { x: 0.0, y: 0.0, w: 12.0, h: 32.0 });
+        app.selection = Some(SelRect {
+            x: 0.0,
+            y: 0.0,
+            w: 12.0,
+            h: 32.0,
+        });
         app.add_mask_from_selection();
         app.tool = Tool::Brush;
         app.params.size = 10.0;
@@ -3668,12 +4274,18 @@ mod tests {
         app.begin_stroke((24.0, 16.0), false);
         app.move_stroke((28.0, 16.0), false);
         app.end_stroke();
-        assert_eq!(app.doc.layers[0].pixels, pixels_before, "пиксели слоя не тронуты");
+        assert_eq!(
+            app.doc.layers[0].pixels, pixels_before,
+            "пиксели слоя не тронуты"
+        );
         let mask = app.doc.layers[0].mask.as_ref().expect("маска на месте");
         assert_eq!(mask[16 * 32 + 24], 255, "кисть открыла маску в мазке");
         // Отмена возвращает маску до кисти: справа снова закрыто.
         app.undo();
-        let mask = app.doc.layers[0].mask.as_ref().expect("маска осталась после отмены кисти");
+        let mask = app.doc.layers[0]
+            .mask
+            .as_ref()
+            .expect("маска осталась после отмены кисти");
         assert_eq!(mask[16 * 32 + 24], 0, "отмена вернула закрытую маску");
         assert_eq!(mask[16 * 32 + 4], 255, "левая половина осталась открытой");
     }
@@ -3682,7 +4294,12 @@ mod tests {
     fn eraser_closes_mask_and_undo_restores() {
         let mut app = app_with_blank(32, 32);
         app.doc.active_layer_mut().fill([255, 255, 255, 255]);
-        app.selection = Some(SelRect { x: 0.0, y: 0.0, w: 32.0, h: 32.0 });
+        app.selection = Some(SelRect {
+            x: 0.0,
+            y: 0.0,
+            w: 32.0,
+            h: 32.0,
+        });
         app.add_mask_from_selection();
         app.tool = Tool::Eraser;
         app.params.size = 12.0;
@@ -3699,7 +4316,12 @@ mod tests {
     #[test]
     fn mask_invert_flip_and_delete_with_history() {
         let mut app = app_with_blank(16, 16);
-        app.selection = Some(SelRect { x: 0.0, y: 0.0, w: 8.0, h: 16.0 });
+        app.selection = Some(SelRect {
+            x: 0.0,
+            y: 0.0,
+            w: 8.0,
+            h: 16.0,
+        });
         app.add_mask_from_selection();
         let m = app.doc.layers[0].mask.clone().unwrap();
         assert_eq!(m[0], 255, "левая половина открыта");
@@ -3718,7 +4340,12 @@ mod tests {
     fn mask_survives_project_round_trip() {
         let mut app = app_with_blank(24, 24);
         app.doc.active_layer_mut().set(24, 4, 4, [9, 8, 7, 255]);
-        app.selection = Some(SelRect { x: 0.0, y: 0.0, w: 12.0, h: 24.0 });
+        app.selection = Some(SelRect {
+            x: 0.0,
+            y: 0.0,
+            w: 12.0,
+            h: 24.0,
+        });
         app.add_mask_from_selection();
         let expected = app.doc.layers[0].mask.clone().unwrap();
         let path = temp_file("mask.tpaint");
@@ -3726,7 +4353,10 @@ mod tests {
         let mut back = App::new();
         back.open_project(&path).expect("прочитали");
         let _ = std::fs::remove_file(&path);
-        let got = back.doc.layers[0].mask.as_ref().expect("маска должна сохраниться");
+        let got = back.doc.layers[0]
+            .mask
+            .as_ref()
+            .expect("маска должна сохраниться");
         assert_eq!(got, &expected, "маска сохранилась без потерь");
         assert_eq!(back.doc.layers[0].get(24, 4, 4), [9, 8, 7, 255]);
     }
@@ -3744,8 +4374,14 @@ mod tests {
         back.open_project(&path).expect("прочитали");
         let _ = std::fs::remove_file(&path);
         assert_eq!(back.doc.layers[1].meta.group.as_deref(), Some("Группа 1"));
-        assert!(!back.doc.layers[1].meta.group_open, "папка осталась свёрнутой");
-        assert!(!back.layer_visible_in_panel(0), "содержимое осталось скрытым в панели");
+        assert!(
+            !back.doc.layers[1].meta.group_open,
+            "папка осталась свёрнутой"
+        );
+        assert!(
+            !back.layer_visible_in_panel(0),
+            "содержимое осталось скрытым в панели"
+        );
     }
 
     #[test]
@@ -3765,7 +4401,11 @@ mod tests {
             s.push(p, 0.6);
         }
         // В конце мазок обязан дойти до последней точки — иначе кисть отстаёт.
-        assert!((s.pos.0 - 60.0).abs() < 1.5, "стабилизатор не дошёл до курсора: {:?}", s.pos);
+        assert!(
+            (s.pos.0 - 60.0).abs() < 1.5,
+            "стабилизатор не дошёл до курсора: {:?}",
+            s.pos
+        );
         assert!(s.pos.1.abs() < 2.0, "дрожание не сглажено: {:?}", s.pos);
     }
 
@@ -3775,7 +4415,11 @@ mod tests {
         s.reset((0.0, 0.0));
         s.push((5.0, 7.0), 0.0);
         s.push((11.0, 3.0), 0.0);
-        assert!((s.pos.0 - 11.0).abs() < 0.001 && (s.pos.1 - 3.0).abs() < 0.001, "без сглаживания точно за курсором: {:?}", s.pos);
+        assert!(
+            (s.pos.0 - 11.0).abs() < 0.001 && (s.pos.1 - 3.0).abs() < 0.001,
+            "без сглаживания точно за курсором: {:?}",
+            s.pos
+        );
     }
 
     #[test]
@@ -3806,9 +4450,16 @@ mod tests {
             app.begin_stroke((10.0, 32.0), false);
             app.move_stroke((50.0, 32.0), false);
             app.end_stroke();
-            app.doc.layers[0].pixels.chunks(4).filter(|p| p[3] > 0).count()
+            app.doc.layers[0]
+                .pixels
+                .chunks(4)
+                .filter(|p| p[3] > 0)
+                .count()
         };
-        assert!(strokes(0.02) >= strokes(0.5), "мелкий шаг не может красить меньше");
+        assert!(
+            strokes(0.02) >= strokes(0.5),
+            "мелкий шаг не может красить меньше"
+        );
     }
 
     #[test]
@@ -3847,33 +4498,65 @@ mod tests {
     #[test]
     fn invert_flips_selection_area() {
         let mut app = app_with_blank(20, 20);
-        app.selection = Some(SelRect { x: 0.0, y: 0.0, w: 10.0, h: 20.0 });
+        app.selection = Some(SelRect {
+            x: 0.0,
+            y: 0.0,
+            w: 10.0,
+            h: 20.0,
+        });
         app.invert_selection();
         // Теперь выделено всё, кроме левой половины.
-        assert!(app.sel_cover(5, 5) == 0, "левая половина больше не выделена");
+        assert!(
+            app.sel_cover(5, 5) == 0,
+            "левая половина больше не выделена"
+        );
         assert!(app.sel_cover(15, 5) > 200, "правая половина выделена");
     }
 
     #[test]
     fn feather_softens_selection_edge() {
         let mut app = app_with_blank(40, 40);
-        app.selection = Some(SelRect { x: 10.0, y: 10.0, w: 20.0, h: 20.0 });
+        app.selection = Some(SelRect {
+            x: 10.0,
+            y: 10.0,
+            w: 20.0,
+            h: 20.0,
+        });
         app.feather_selection(3.0);
         // Внутри всё по-прежнему выделено, у края покрытие частичное.
         assert!(app.sel_cover(20, 20) > 200, "центр выделен");
-        assert!(app.sel_cover(9, 20) > 0 && app.sel_cover(9, 20) < 255, "край мягкий: {}", app.sel_cover(9, 20));
+        assert!(
+            app.sel_cover(9, 20) > 0 && app.sel_cover(9, 20) < 255,
+            "край мягкий: {}",
+            app.sel_cover(9, 20)
+        );
     }
 
     #[test]
     fn grow_and_shrink_change_area_size() {
         let mut app = app_with_blank(40, 40);
-        app.selection = Some(SelRect { x: 10.0, y: 10.0, w: 20.0, h: 20.0 });
+        app.selection = Some(SelRect {
+            x: 10.0,
+            y: 10.0,
+            w: 20.0,
+            h: 20.0,
+        });
         app.grow_selection(3.0);
         let big = app.selection.unwrap();
-        assert_eq!((big.x, big.w), (7.0, 26.0), "расширилось на 3 пикселя: {:?}", big);
+        assert_eq!(
+            (big.x, big.w),
+            (7.0, 26.0),
+            "расширилось на 3 пикселя: {:?}",
+            big
+        );
         app.grow_selection(-3.0);
         let back = app.selection.unwrap();
-        assert_eq!((back.x, back.w), (10.0, 20.0), "сужение вернуло исходный размер: {:?}", back);
+        assert_eq!(
+            (back.x, back.w),
+            (10.0, 20.0),
+            "сужение вернуло исходный размер: {:?}",
+            back
+        );
     }
 
     #[test]
@@ -3912,7 +4595,11 @@ mod tests {
         app.doc.touch();
         app.doc.ensure_composite();
         let mid = 15 * 20 * 4;
-        assert_eq!(&app.doc.composite[mid..mid + 3], &[255, 0, 0], "свободный слой виден целиком");
+        assert_eq!(
+            &app.doc.composite[mid..mid + 3],
+            &[255, 0, 0],
+            "свободный слой виден целиком"
+        );
     }
 
     #[test]
@@ -3961,7 +4648,10 @@ mod tests {
         });
         app.doc.touch();
         app.doc.ensure_composite();
-        assert_eq!(app.doc.layers[0].pixels, pixels_before, "эффект неразрушающий");
+        assert_eq!(
+            app.doc.layers[0].pixels, pixels_before,
+            "эффект неразрушающий"
+        );
         let c = &app.doc.composite;
         let at = |x: usize, y: usize| c[(y * 40 + x) * 4 + 3];
         assert!(at(20, 20) > 0, "тень справа снизу от квадрата");
@@ -4035,7 +4725,10 @@ mod tests {
         back.open_project(&path).expect("прочитали");
         let _ = std::fs::remove_file(&path);
         let m = &back.doc.layers[0].meta;
-        assert!(m.fx.shadow && m.fx.outline && m.fx.glow, "эффекты сохранились");
+        assert!(
+            m.fx.shadow && m.fx.outline && m.fx.glow,
+            "эффекты сохранились"
+        );
         assert_eq!(m.fx.shadow_dx, 7.0);
         assert_eq!(m.fx.shadow_color, [10, 20, 30, 255]);
         assert_eq!(m.fx.outline_size, 3.0);
@@ -4055,7 +4748,10 @@ mod tests {
         assert!(app.poly_active, "контур набирается");
         assert_eq!(app.poly.len(), 3);
         app.finish_polygon();
-        assert!(!app.poly_active && app.poly.is_empty(), "контур замкнут и убран");
+        assert!(
+            !app.poly_active && app.poly.is_empty(),
+            "контур замкнут и убран"
+        );
         assert!(app.has_sel_mask(), "форма выделения задана маской");
         let s = app.selection.expect("есть границы выделения");
         assert_eq!((s.x, s.y), (5.0, 5.0));
@@ -4098,7 +4794,9 @@ mod tests {
         let mut app = app_with_blank(60, 60);
         for y in 20..40 {
             for x in 20..40 {
-                app.doc.active_layer_mut().set(60, x, y, [255, 255, 255, 255]);
+                app.doc
+                    .active_layer_mut()
+                    .set(60, x, y, [255, 255, 255, 255]);
             }
         }
         let before = app.doc.layers[0].pixels.clone();
@@ -4116,7 +4814,10 @@ mod tests {
         assert!(at(30, 16) > 0, "ореол сверху");
         assert_eq!(at(30, 30), 255, "сам слой на месте");
         // Ореол оранжевый, а не цвет слоя.
-        assert!(c[(30 * 60 + 15) * 4] > 150 && c[(30 * 60 + 15) * 4 + 2] < 100, "цвет свечения");
+        assert!(
+            c[(30 * 60 + 15) * 4] > 150 && c[(30 * 60 + 15) * 4 + 2] < 100,
+            "цвет свечения"
+        );
     }
 
     #[test]
@@ -4149,7 +4850,8 @@ mod tests {
         }
         let path = temp_file("образец.psd");
         std::fs::write(&path, crate::psd::write(w, h, &px)).expect("записали PSD");
-        let back = crate::psd::read(&std::fs::read(&path).expect("прочитали файл")).expect("разбор PSD");
+        let back =
+            crate::psd::read(&std::fs::read(&path).expect("прочитали файл")).expect("разбор PSD");
         assert_eq!(back.pixels, px, "файл на диске читается обратно без потерь");
     }
 
@@ -4189,7 +4891,10 @@ mod tests {
         let before = app.doc.layers[0].pixels.clone();
         app.open_curves();
         app.curve_point_to(0.5, 1.0);
-        assert_ne!(app.doc.layers[0].pixels, before, "слой изменён предпросмотром");
+        assert_ne!(
+            app.doc.layers[0].pixels, before,
+            "слой изменён предпросмотром"
+        );
         app.close_curves(false);
         assert_eq!(app.doc.layers[0].pixels, before, "отмена вернула слой");
         assert!(!app.history.can_undo(), "в истории ничего нет");
@@ -4201,7 +4906,11 @@ mod tests {
         app.open_curves();
         app.curve_point_to(0.3, 0.9);
         app.curve_reset();
-        assert_eq!(app.curve.pts, vec![(0.0, 0.0), (1.0, 1.0)], "кривая снова прямая");
+        assert_eq!(
+            app.curve.pts,
+            vec![(0.0, 0.0), (1.0, 1.0)],
+            "кривая снова прямая"
+        );
     }
 
     #[test]
@@ -4237,7 +4946,11 @@ mod tests {
         assert!(app.levels_dialog, "окно уровней открыто");
         app.lvl_in_black = 60.0;
         app.update_curve();
-        assert_eq!(app.doc.active_layer().get(16, 4, 0)[0], 5, "64 превращается в 5");
+        assert_eq!(
+            app.doc.active_layer().get(16, 4, 0)[0],
+            5,
+            "64 превращается в 5"
+        );
         assert_eq!(before[4 * 4], 64, "исходный тон был 64");
         app.close_corr(true);
         assert!(app.history.can_undo(), "правка попала в историю");
@@ -4273,7 +4986,11 @@ mod tests {
         // Восстановление открывает документ и ставит пометку.
         let mut back = App::new();
         back.restore_autosave().expect("восстановили");
-        assert_eq!(back.doc.layers[0].get(10, 5, 5), [7, 8, 9, 255], "пиксели на месте");
+        assert_eq!(
+            back.doc.layers[0].get(10, 5, 5),
+            [7, 8, 9, 255],
+            "пиксели на месте"
+        );
         assert!(!App::autosave_pending(), "второй раз не предлагаем");
         // Явное сохранение убирает служебную копию.
         let mut app = app_with_blank(10, 10);
@@ -4291,7 +5008,11 @@ mod tests {
         // Красное пятно слева, синее справа — кисть возьмёт то, что под ней.
         for y in 0..40 {
             for x in 0..40 {
-                let c = if x < 20 { [220, 30, 20, 255] } else { [20, 30, 220, 255] };
+                let c = if x < 20 {
+                    [220, 30, 20, 255]
+                } else {
+                    [20, 30, 220, 255]
+                };
                 app.doc.active_layer_mut().set(40, x, y, c);
             }
         }
@@ -4305,8 +5026,16 @@ mod tests {
         app.end_stroke();
         let left = app.doc.active_layer().get(40, 8, 30);
         let right = app.doc.active_layer().get(40, 32, 30);
-        assert!(left[0] > 150 && left[2] < 90, "слева взят красный: {:?}", left);
-        assert!(right[2] > 150 && right[0] < 90, "справа взят синий: {:?}", right);
+        assert!(
+            left[0] > 150 && left[2] < 90,
+            "слева взят красный: {:?}",
+            left
+        );
+        assert!(
+            right[2] > 150 && right[0] < 90,
+            "справа взят синий: {:?}",
+            right
+        );
     }
 
     #[test]
@@ -4315,7 +5044,11 @@ mod tests {
         // Полосатый фон: чередование белого и чёрного.
         for y in 0..40 {
             for x in 0..40 {
-                let c = if (x / 4) % 2 == 0 { [255, 255, 255, 255] } else { [0, 0, 0, 255] };
+                let c = if (x / 4) % 2 == 0 {
+                    [255, 255, 255, 255]
+                } else {
+                    [0, 0, 0, 255]
+                };
                 app.doc.active_layer_mut().set(40, x, y, c);
             }
         }
@@ -4379,7 +5112,11 @@ mod tests {
         let after = app.doc.active_layer().get(8, 4, 4);
         assert!(after[0] > 30 && after[2] < 30, "тени сдвинуты: {:?}", after);
         app.balance_reset();
-        assert_eq!(app.doc.active_layer().get(8, 4, 4), [30, 30, 30, 255], "сброс вернул цвет");
+        assert_eq!(
+            app.doc.active_layer().get(8, 4, 4),
+            [30, 30, 30, 255],
+            "сброс вернул цвет"
+        );
         app.balance[0] = [80.0, 0.0, -20.0];
         app.update_color();
         app.close_corr(false);
@@ -4395,7 +5132,10 @@ mod tests {
         // Рядом с направляющей — притягиваемся.
         let p = app.apply_snap((103.0, 40.0), None);
         assert_eq!(p, (100.0, 40.0), "притянулись к направляющей");
-        assert_eq!(app.snap_preview((103.0, 40.0), None).map(|(_, h)| h), Some(SnapHit::GuideV(100.0)));
+        assert_eq!(
+            app.snap_preview((103.0, 40.0), None).map(|(_, h)| h),
+            Some(SnapHit::GuideV(100.0))
+        );
         // Далеко — не притягиваемся.
         let p = app.apply_snap((130.0, 40.0), None);
         assert_eq!(p, (130.0, 40.0), "далеко от направляющей");
@@ -4412,9 +5152,17 @@ mod tests {
         app.snap_grid = true;
         app.show_grid = true;
         app.grid_size = 64.0;
-        assert_eq!(app.apply_snap((61.0, 130.0), None), (64.0, 128.0), "притянулись к узлу сетки");
+        assert_eq!(
+            app.apply_snap((61.0, 130.0), None),
+            (64.0, 128.0),
+            "притянулись к узлу сетки"
+        );
         app.show_grid = false;
-        assert_eq!(app.apply_snap((61.0, 130.0), None), (61.0, 130.0), "сетка выключена");
+        assert_eq!(
+            app.apply_snap((61.0, 130.0), None),
+            (61.0, 130.0),
+            "сетка выключена"
+        );
     }
 
     #[test]
@@ -4425,11 +5173,21 @@ mod tests {
         // Мазок почти по горизонтали (1°) должен лечь на 0°.
         let p = app.apply_snap((200.0, 4.0), Some((0.0, 0.0)));
         assert!(p.1 < 0.6, "лёг на горизонталь: {:?}", p);
-        assert_eq!(app.snap_preview((200.0, 4.0), Some((0.0, 0.0))).map(|(_, h)| h), Some(SnapHit::Angle));
+        assert_eq!(
+            app.snap_preview((200.0, 4.0), Some((0.0, 0.0)))
+                .map(|(_, h)| h),
+            Some(SnapHit::Angle)
+        );
         // Мазок под 40° — между шагами, привязки нет.
-        assert!(app.snap_preview((100.0, 84.0), Some((0.0, 0.0))).is_none(), "40° не притягивается");
+        assert!(
+            app.snap_preview((100.0, 84.0), Some((0.0, 0.0))).is_none(),
+            "40° не притягивается"
+        );
         let p = app.apply_snap((100.0, 84.0), Some((0.0, 0.0)));
-        assert!((p.0 - 100.0).abs() < 0.01 && (p.1 - 84.0).abs() < 0.01, "точка не сдвинулась");
+        assert!(
+            (p.0 - 100.0).abs() < 0.01 && (p.1 - 84.0).abs() < 0.01,
+            "точка не сдвинулась"
+        );
     }
 
     fn temp_file(name: &str) -> String {
@@ -4460,8 +5218,14 @@ mod tests {
         assert_eq!(fresh.doc.layers.len(), 2);
         assert_eq!(fresh.doc.layers[0].pixels[0], 10);
         assert_eq!(fresh.doc.layers[1].pixels[1], 100);
-        assert_eq!(fresh.doc.layers[1].pixels[3], 128, "полупрозрачность слоя сохранена");
-        assert_eq!(fresh.doc.layers[1].meta.blend, crate::doc::BlendMode::Screen);
+        assert_eq!(
+            fresh.doc.layers[1].pixels[3], 128,
+            "полупрозрачность слоя сохранена"
+        );
+        assert_eq!(
+            fresh.doc.layers[1].meta.blend,
+            crate::doc::BlendMode::Screen
+        );
         assert!((fresh.doc.layers[1].meta.opacity - 0.75).abs() < 0.001);
     }
 
@@ -4480,10 +5244,22 @@ mod tests {
         let _ = std::fs::remove_file(&path);
         assert_eq!(app.doc.layers.len(), 2, "добавлен новый слой");
         assert_eq!(app.doc.active, 1, "новый слой активен");
-        assert!(app.doc.layers[1].meta.name.ends_with("import"), "имя слоя из имени файла: {}", app.doc.layers[1].meta.name);
+        assert!(
+            app.doc.layers[1].meta.name.ends_with("import"),
+            "имя слоя из имени файла: {}",
+            app.doc.layers[1].meta.name
+        );
         // Изображение 10×10 центрируется: (40-10)/2 = 15
-        assert_eq!(app.doc.active_layer().get(40, 20, 20), [255, 0, 0, 255], "центр картинки на месте");
-        assert_eq!(app.doc.active_layer().get(40, 2, 2)[3], 0, "по краям холста пусто");
+        assert_eq!(
+            app.doc.active_layer().get(40, 20, 20),
+            [255, 0, 0, 255],
+            "центр картинки на месте"
+        );
+        assert_eq!(
+            app.doc.active_layer().get(40, 2, 2)[3],
+            0,
+            "по краям холста пусто"
+        );
         assert!(app.dirty, "импорт меняет документ");
     }
 
@@ -4494,12 +5270,17 @@ mod tests {
         let png = temp_file("export.png");
         let jpg = temp_file("export.jpg");
         app.export_png(&png, false).expect("экспорт PNG");
-        app.export_png(&png, true).expect("экспорт PNG с прозрачностью");
+        app.export_png(&png, true)
+            .expect("экспорт PNG с прозрачностью");
         app.export_jpeg(&jpg, 90).expect("экспорт JPEG");
         let png_data = std::fs::read(&png).expect("PNG прочитан");
         let jpg_data = std::fs::read(&jpg).expect("JPEG прочитан");
         // Сигнатуры: PNG — 89 50 4E 47, JPEG — FF D8 FF.
-        assert_eq!(&png_data[..4], &[0x89, b'P', b'N', b'G'], "это должен быть PNG");
+        assert_eq!(
+            &png_data[..4],
+            &[0x89, b'P', b'N', b'G'],
+            "это должен быть PNG"
+        );
         assert_eq!(&jpg_data[..3], &[0xFF, 0xD8, 0xFF], "это должен быть JPEG");
         // Оба файла снова открываются, размер не теряется.
         let back = image::open(&png).expect("PNG открывается").to_rgba8();
@@ -4616,7 +5397,12 @@ mod tests {
         app.begin_stroke((620.0, 130.0), false);
         app.move_stroke((700.0, 130.0), false);
         app.end_stroke();
-        app.selection = Some(SelRect { x: 520.0, y: 40.0, w: 240.0, h: 180.0 });
+        app.selection = Some(SelRect {
+            x: 520.0,
+            y: 40.0,
+            w: 240.0,
+            h: 180.0,
+        });
         app.add_mask_from_selection();
         app.edit_mask = false;
         // Направляющие и сетка — чтобы на снимке было видно и их.
@@ -4647,24 +5433,46 @@ mod tests {
         // и обратно читается
         let back = crate::project::load(&path).expect("демо-проект читается");
         assert_eq!(back.layers.len(), 6);
-        assert!(back.layers[1].pixels.iter().any(|v| *v != 0), "текст попал в файл");
+        assert!(
+            back.layers[1].pixels.iter().any(|v| *v != 0),
+            "текст попал в файл"
+        );
         assert!(back.layers[4].mask.is_some(), "маска сохранилась в проекте");
-        assert_eq!(back.layers[3].meta.group.as_deref(), Some("Группа 1"), "папка сохранилась");
+        assert_eq!(
+            back.layers[3].meta.group.as_deref(),
+            Some("Группа 1"),
+            "папка сохранилась"
+        );
         // Тот же рисунок — в PSD со слоями: так проверяется импорт слоёв.
         let psd = temp_file("demo.psd");
         app.export_psd(&psd).expect("демо-PSD со слоями сохранён");
-        let file = crate::psd::read_file(&std::fs::read(&psd).expect("прочитали PSD")).expect("разбор PSD");
+        let file = crate::psd::read_file(&std::fs::read(&psd).expect("прочитали PSD"))
+            .expect("разбор PSD");
         assert!(file.layers.len() >= 5, "слои в PSD: {}", file.layers.len());
-        assert!(file.layers.iter().any(|l| l.mask.is_some()), "маска дошла до PSD");
         assert!(
-            file.layers.iter().any(|l| matches!(l.kind, crate::psd::LayerKind::GroupOpen)),
+            file.layers.iter().any(|l| l.mask.is_some()),
+            "маска дошла до PSD"
+        );
+        assert!(
+            file.layers
+                .iter()
+                .any(|l| matches!(l.kind, crate::psd::LayerKind::GroupOpen)),
             "папка дошла до PSD"
         );
         // И обратно: PSD открывается теми же слоями.
         let mut opened = App::new();
         opened.open_psd(&psd).expect("открыли демо-PSD");
-        let names: Vec<String> = opened.doc.layers.iter().map(|l| l.meta.name.clone()).collect();
-        assert!(opened.doc.layers.len() >= 7, "слои импортированы: {:?}", names);
+        let names: Vec<String> = opened
+            .doc
+            .layers
+            .iter()
+            .map(|l| l.meta.name.clone())
+            .collect();
+        assert!(
+            opened.doc.layers.len() >= 7,
+            "слои импортированы: {:?}",
+            names
+        );
         assert_eq!(names[0], "Фон", "нижний слой на месте: {:?}", names);
         assert_eq!(names[6], "Группа 1", "папка стала верхней: {:?}", names);
         let vis: Vec<bool> = (0..opened.doc.layers.len())
@@ -4672,7 +5480,11 @@ mod tests {
             .collect();
         assert!(vis.iter().all(|v| *v), "все слои видны в панели: {:?}", vis);
         assert!(
-            opened.doc.layers.iter().any(|l| l.meta.group.as_deref() == Some("Группа 1")),
+            opened
+                .doc
+                .layers
+                .iter()
+                .any(|l| l.meta.group.as_deref() == Some("Группа 1")),
             "папка на месте: {:?}",
             names
         );
@@ -4696,17 +5508,43 @@ mod tests {
         assert_eq!(app.history.position(), 3);
         let labels = app.history_labels();
         assert_eq!(labels.len(), 4, "состояние + три шага: {:?}", labels);
-        assert!(labels[1..].iter().all(|l| l.contains("Кисть")), "шаг назван инструментом: {:?}", labels);
-        let painted = app.doc.active_layer().pixels.iter().filter(|v| **v != 0).count();
+        assert!(
+            labels[1..].iter().all(|l| l.contains("Кисть")),
+            "шаг назван инструментом: {:?}",
+            labels
+        );
+        let painted = app
+            .doc
+            .active_layer()
+            .pixels
+            .iter()
+            .filter(|v| **v != 0)
+            .count();
         assert!(painted > 0);
 
         // перематываемся в самое начало — холст снова пустой
         app.history_goto(0);
         assert_eq!(app.history.position(), 0);
-        assert_eq!(app.doc.active_layer().pixels.iter().filter(|v| **v != 0).count(), 0);
+        assert_eq!(
+            app.doc
+                .active_layer()
+                .pixels
+                .iter()
+                .filter(|v| **v != 0)
+                .count(),
+            0
+        );
         // и возвращаемся в конец
         app.history_goto(3);
-        assert_eq!(app.doc.active_layer().pixels.iter().filter(|v| **v != 0).count(), painted);
+        assert_eq!(
+            app.doc
+                .active_layer()
+                .pixels
+                .iter()
+                .filter(|v| **v != 0)
+                .count(),
+            painted
+        );
     }
 
     #[test]
@@ -4716,7 +5554,11 @@ mod tests {
         app.duplicate_layer();
         assert_eq!(app.doc.layers.len(), 2);
         app.undo();
-        assert_eq!(app.doc.layers.len(), 1, "отмена убирает копию, а не добавляет третью");
+        assert_eq!(
+            app.doc.layers.len(),
+            1,
+            "отмена убирает копию, а не добавляет третью"
+        );
         app.redo();
         assert_eq!(app.doc.layers.len(), 2, "повтор возвращает копию");
     }
@@ -4729,13 +5571,25 @@ mod tests {
         app.doc.active_layer_mut().set(16, 4, 4, [200, 0, 0, 255]);
         app.merge_down();
         assert_eq!(app.doc.layers.len(), 1, "после объединения один слой");
-        assert_eq!(app.doc.layers[0].get(16, 4, 4), [200, 0, 0, 255], "пиксель переехал вниз");
+        assert_eq!(
+            app.doc.layers[0].get(16, 4, 4),
+            [200, 0, 0, 255],
+            "пиксель переехал вниз"
+        );
         app.undo();
         assert_eq!(app.doc.layers.len(), 2, "верхний слой вернулся");
-        assert_eq!(app.doc.layers[0].get(16, 4, 4), [10, 10, 10, 255], "нижний слой откатан");
+        assert_eq!(
+            app.doc.layers[0].get(16, 4, 4),
+            [10, 10, 10, 255],
+            "нижний слой откатан"
+        );
         app.redo();
         assert_eq!(app.doc.layers.len(), 1);
-        assert_eq!(app.doc.layers[0].get(16, 4, 4), [200, 0, 0, 255], "повтор снова объединил");
+        assert_eq!(
+            app.doc.layers[0].get(16, 4, 4),
+            [200, 0, 0, 255],
+            "повтор снова объединил"
+        );
     }
 
     #[test]
@@ -4759,7 +5613,11 @@ mod tests {
     #[test]
     fn trim_canvas_cuts_empty_borders() {
         let mut app = app_with_blank(100, 100);
-        app.doc.active_layer_mut().pixels.iter_mut().for_each(|v| *v = 0);
+        app.doc
+            .active_layer_mut()
+            .pixels
+            .iter_mut()
+            .for_each(|v| *v = 0);
         let w = 100;
         for y in 20..40 {
             for x in 30..60 {
@@ -4776,9 +5634,17 @@ mod tests {
         let mut app = app_with_blank(40, 20);
         app.doc.active_layer_mut().set(40, 2, 10, [7, 7, 7, 255]);
         app.flip_layer(true);
-        assert_eq!(app.doc.active_layer().get(40, 37, 10), [7, 7, 7, 255], "пиксель зеркален");
+        assert_eq!(
+            app.doc.active_layer().get(40, 37, 10),
+            [7, 7, 7, 255],
+            "пиксель зеркален"
+        );
         app.undo();
-        assert_eq!(app.doc.active_layer().get(40, 2, 10), [7, 7, 7, 255], "отмена вернула");
+        assert_eq!(
+            app.doc.active_layer().get(40, 2, 10),
+            [7, 7, 7, 255],
+            "отмена вернула"
+        );
     }
 
     #[test]
@@ -4808,7 +5674,12 @@ mod tests {
         assert!(top < bottom, "текст нарисован: {:?} {:?}", top, bottom);
         let h = bottom - top;
         let w = right - left;
-        assert!(h > w * 2, "столбик: высота {} заметно больше ширины {}", h, w);
+        assert!(
+            h > w * 2,
+            "столбик: высота {} заметно больше ширины {}",
+            h,
+            w
+        );
         // Верхняя буква начинается у точки клика, а не у низа.
         assert!(top < 40, "первая буква сверху: {}", top);
     }
@@ -4829,14 +5700,21 @@ mod tests {
             let mut line = String::new();
             for x in 0..80 {
                 let a = app.doc.active_layer().get(80, x, y)[3];
-                line.push(if a > 128 { '#' } else if a > 16 { '.' } else { ' ' });
+                line.push(if a > 128 {
+                    '#'
+                } else if a > 16 {
+                    '.'
+                } else {
+                    ' '
+                });
             }
             println!("{}", line);
         }
     }
 
     #[test]
-    fn text_is_rasterized_into_active_layer() {        let mut app = app_with_blank(200, 80);
+    fn text_is_rasterized_into_active_layer() {
+        let mut app = app_with_blank(200, 80);
         app.primary = [0, 0, 0, 255];
         app.tool = Tool::Text;
         app.params.size = 40.0;
@@ -4844,12 +5722,31 @@ mod tests {
         app.text_input('A');
         app.text_input('B');
         app.commit_text();
-        let painted = app.doc.active_layer().pixels.chunks(4).filter(|p| p[3] > 0).count();
-        assert!(painted > 20, "текст должен нарисовать пиксели, а не пустоту: {}", painted);
+        let painted = app
+            .doc
+            .active_layer()
+            .pixels
+            .chunks(4)
+            .filter(|p| p[3] > 0)
+            .count();
+        assert!(
+            painted > 20,
+            "текст должен нарисовать пиксели, а не пустоту: {}",
+            painted
+        );
         assert!(app.text.is_none(), "после фиксации черновика нет");
         // Текст попал в историю и отменяется
         app.undo();
-        assert_eq!(app.doc.active_layer().pixels.iter().filter(|v| **v != 0).count(), 0, "текст отменён");
+        assert_eq!(
+            app.doc
+                .active_layer()
+                .pixels
+                .iter()
+                .filter(|v| **v != 0)
+                .count(),
+            0,
+            "текст отменён"
+        );
     }
 
     #[test]
@@ -4862,7 +5759,10 @@ mod tests {
         let p = app.canvas_to_screen(400.0, 250.0);
         let cx = (app.canvas_rect[0] + app.canvas_rect[2]) / 2.0;
         let cy = (app.canvas_rect[1] + app.canvas_rect[3]) / 2.0;
-        assert!((p.0 - cx).abs() < 0.01 && (p.1 - cy).abs() < 0.01, "точка в центре вида");
+        assert!(
+            (p.0 - cx).abs() < 0.01 && (p.1 - cy).abs() < 0.01,
+            "точка в центре вида"
+        );
     }
 
     #[test]
@@ -4883,8 +5783,14 @@ mod tests {
         let _ = std::fs::remove_file(&path);
         assert_eq!((back.doc.width, back.doc.height), (12, 9), "размер холста");
         assert_eq!(back.doc.layers.len(), 1, "один слой");
-        assert_eq!(back.doc.layers[0].pixels, app.doc.layers[0].pixels, "пиксели совпали");
-        assert!(back.dirty, "PSD нельзя перезаписать — документ считается новым");
+        assert_eq!(
+            back.doc.layers[0].pixels, app.doc.layers[0].pixels,
+            "пиксели совпали"
+        );
+        assert!(
+            back.dirty,
+            "PSD нельзя перезаписать — документ считается новым"
+        );
     }
 
     #[test]
@@ -4915,18 +5821,42 @@ mod tests {
         let _ = std::fs::remove_file(&path);
         // У слоя-шапки было своё содержимое: в PSD у папки каналов нет, поэтому
         // содержимое возвращается отдельным слоем, а шапка — пустой папкой.
-        assert_eq!(back.doc.layers.len(), 4, "фон, слой в папке, её шапка и сама папка");
-        let names: Vec<String> = back.doc.layers.iter().map(|l| l.meta.name.clone()).collect();
+        assert_eq!(
+            back.doc.layers.len(),
+            4,
+            "фон, слой в папке, её шапка и сама папка"
+        );
+        let names: Vec<String> = back
+            .doc
+            .layers
+            .iter()
+            .map(|l| l.meta.name.clone())
+            .collect();
         // Слой 0 — нижний, поэтому папка в конце списка.
-        assert_eq!(names, vec!["Фон", "Слой 2", "Облако", "Группа 1"], "порядок и имена");
+        assert_eq!(
+            names,
+            vec!["Фон", "Слой 2", "Облако", "Группа 1"],
+            "порядок и имена"
+        );
         assert_eq!(back.doc.layers[0].meta.group, None, "фон вне папки");
         for (i, l) in back.doc.layers.iter().enumerate().skip(1) {
-            assert_eq!(l.meta.group.as_deref(), Some("Группа 1"), "слой {} в папке", i);
+            assert_eq!(
+                l.meta.group.as_deref(),
+                Some("Группа 1"),
+                "слой {} в папке",
+                i
+            );
         }
         // Пиксели, непрозрачность, режим и маска переехали.
         assert_eq!(back.doc.layers[0].pixels, app.doc.layers[0].pixels, "фон");
-        assert_eq!(back.doc.layers[1].pixels, app.doc.layers[1].pixels, "слой в папке");
-        assert_eq!(back.doc.layers[2].pixels, app.doc.layers[2].pixels, "содержимое шапки");
+        assert_eq!(
+            back.doc.layers[1].pixels, app.doc.layers[1].pixels,
+            "слой в папке"
+        );
+        assert_eq!(
+            back.doc.layers[2].pixels, app.doc.layers[2].pixels,
+            "содержимое шапки"
+        );
         assert!(
             back.doc.layers[3].pixels.iter().all(|v| *v == 0),
             "сама папка пустая, как в Photoshop"
@@ -4995,7 +5925,11 @@ mod tests {
         assert!(layers[0].meta.visible, "видимый слой виден");
         assert!(!layers[1].meta.visible, "скрытый слой скрыт");
         assert_eq!(layers[1].meta.opacity, 200.0 / 255.0, "непрозрачность");
-        assert_eq!(layers[1].meta.blend, crate::doc::BlendMode::Screen, "режим наложения");
+        assert_eq!(
+            layers[1].meta.blend,
+            crate::doc::BlendMode::Screen,
+            "режим наложения"
+        );
         assert_eq!(layers[0].get(w, 1, 1), [0, 0, 255, 160], "пиксели слоя");
     }
 
@@ -5020,7 +5954,8 @@ mod tests {
             px[i] = 255;
         }
         std::fs::write(&path, crate::psd::write(3, 3, &px)).expect("записали");
-        app.open_project(&path).expect("путь с .psd открывается как PSD");
+        app.open_project(&path)
+            .expect("путь с .psd открывается как PSD");
         let _ = std::fs::remove_file(&path);
         assert_eq!((app.doc.width, app.doc.height), (3, 3));
     }
@@ -5064,7 +5999,9 @@ mod tests {
         for y in 0..120i32 {
             for x in 0..120i32 {
                 if l.pixels[((y * 120 + x) * 4) as usize + 3] > 0
-                    && !marks.iter().any(|p| (p.0 - x).abs() < 8 && (p.1 - y).abs() < 8)
+                    && !marks
+                        .iter()
+                        .any(|p| (p.0 - x).abs() < 8 && (p.1 - y).abs() < 8)
                 {
                     marks.push((x, y));
                 }
@@ -5078,7 +6015,12 @@ mod tests {
         let one = dab_count(Symmetry::Off, 6.0);
         assert!(one > 0, "отпечаток нарисован");
         for sym in [Symmetry::Center, Symmetry::Vertical, Symmetry::Horizontal] {
-            assert_eq!(dab_clusters(sym, 6.0), 2, "{}: мазок и его отражение", sym.name());
+            assert_eq!(
+                dab_clusters(sym, 6.0),
+                2,
+                "{}: мазок и его отражение",
+                sym.name()
+            );
             let n = dab_count(sym, 6.0);
             assert!(
                 (n as i32 - 2 * one as i32).abs() <= 2,
@@ -5089,10 +6031,18 @@ mod tests {
             );
         }
         // По лучам: 6 секторов, в каждом отпечаток и его отражение.
-        assert_eq!(dab_clusters(Symmetry::Radial, 6.0), 12, "шесть лучей по два");
+        assert_eq!(
+            dab_clusters(Symmetry::Radial, 6.0),
+            12,
+            "шесть лучей по два"
+        );
         assert_eq!(dab_clusters(Symmetry::Radial, 4.0), 8, "четыре луча по два");
         assert_eq!(dab_clusters(Symmetry::Radial, 2.0), 4, "два луча по два");
-        assert_eq!(dab_clusters(Symmetry::Off, 6.0), 1, "без симметрии один мазок");
+        assert_eq!(
+            dab_clusters(Symmetry::Off, 6.0),
+            1,
+            "без симметрии один мазок"
+        );
     }
 
     #[test]
@@ -5153,7 +6103,12 @@ mod tests {
             }
         }
         assert!(near > 0.0, "мазок нарисован");
-        assert!(far - near < 12.0, "разброс по радиусу мал: {} и {}", near, far);
+        assert!(
+            far - near < 12.0,
+            "разброс по радиусу мал: {} и {}",
+            near,
+            far
+        );
     }
 
     #[test]
@@ -5184,7 +6139,10 @@ mod tests {
         let s = app.selection.expect("рамка создана");
         assert_eq!((s.x, s.y, s.w, s.h), (20.0, 10.0, 20.0, 20.0));
         app.end_select();
-        assert!(app.selection.is_some(), "рамка сохранилась после отпускания");
+        assert!(
+            app.selection.is_some(),
+            "рамка сохранилась после отпускания"
+        );
     }
 
     #[test]
@@ -5193,7 +6151,10 @@ mod tests {
         app.selection = Some(SelRect::new(0.0, 0.0, 10.0, 10.0));
         app.begin_select((30.0, 30.0));
         app.end_select();
-        assert!(app.selection.is_none(), "щелчок без протягивания снимает рамку");
+        assert!(
+            app.selection.is_none(),
+            "щелчок без протягивания снимает рамку"
+        );
     }
 
     #[test]
@@ -5236,11 +6197,22 @@ mod tests {
         // берём содержимое и тянем
         app.begin_select((15.0, 15.0));
         assert!(app.floating.is_some(), "содержимое вырезано в фрагмент");
-        assert_eq!(app.doc.active_layer().get(64, 15, 15)[3], 0, "на месте осталась дырка");
+        assert_eq!(
+            app.doc.active_layer().get(64, 15, 15)[3],
+            0,
+            "на месте осталась дырка"
+        );
         app.move_select((45.0, 45.0));
         app.end_select();
-        assert_eq!(app.doc.active_layer().get(64, 45, 45), [10, 200, 30, 255], "фрагмент лёг на новое место");
-        assert!(app.selection.is_some(), "выделение переехало вместе с фрагментом");
+        assert_eq!(
+            app.doc.active_layer().get(64, 45, 45),
+            [10, 200, 30, 255],
+            "фрагмент лёг на новое место"
+        );
+        assert!(
+            app.selection.is_some(),
+            "выделение переехало вместе с фрагментом"
+        );
     }
 
     #[test]
@@ -5252,13 +6224,21 @@ mod tests {
         app.cut_selection();
         assert_eq!(app.doc.active_layer().get(32, 5, 5)[3], 0, "вырезано");
         app.undo();
-        assert_eq!(app.doc.active_layer().get(32, 5, 5), [1, 2, 3, 255], "отмена вернула пиксель");
+        assert_eq!(
+            app.doc.active_layer().get(32, 5, 5),
+            [1, 2, 3, 255],
+            "отмена вернула пиксель"
+        );
 
         app.selection = Some(SelRect::new(0.0, 0.0, 10.0, 10.0));
         app.delete_selection();
         assert_eq!(app.doc.active_layer().get(32, 5, 5)[3], 0, "удалено");
         app.undo();
-        assert_eq!(app.doc.active_layer().get(32, 5, 5), [1, 2, 3, 255], "отмена вернула удаление");
+        assert_eq!(
+            app.doc.active_layer().get(32, 5, 5),
+            [1, 2, 3, 255],
+            "отмена вернула удаление"
+        );
     }
 
     #[test]

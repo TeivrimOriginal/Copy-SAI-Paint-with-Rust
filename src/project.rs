@@ -59,8 +59,9 @@ pub fn save(doc: &Document, path: &str) -> Result<(), String> {
                 .unwrap_or(0) as u32,
         );
         // Пиксели слоя — отдельным PNG: сжатие есть, формат знакомый.
-        let img = image::RgbaImage::from_raw(doc.width as u32, doc.height as u32, layer.pixels.clone())
-            .ok_or_else(|| "неверный размер пикселей слоя".to_string())?;
+        let img =
+            image::RgbaImage::from_raw(doc.width as u32, doc.height as u32, layer.pixels.clone())
+                .ok_or_else(|| "неверный размер пикселей слоя".to_string())?;
         let mut png = Vec::new();
         img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
             .map_err(|e| e.to_string())?;
@@ -69,8 +70,9 @@ pub fn save(doc: &Document, path: &str) -> Result<(), String> {
         // Маска слоя (с версии 2): серый PNG того же размера.
         match &layer.mask {
             Some(mask) => {
-                let img = image::GrayImage::from_raw(doc.width as u32, doc.height as u32, mask.clone())
-                    .ok_or_else(|| "неверный размер маски слоя".to_string())?;
+                let img =
+                    image::GrayImage::from_raw(doc.width as u32, doc.height as u32, mask.clone())
+                        .ok_or_else(|| "неверный размер маски слоя".to_string())?;
                 let mut png = Vec::new();
                 img.write_to(&mut std::io::Cursor::new(&mut png), image::ImageFormat::Png)
                     .map_err(|e| e.to_string())?;
@@ -129,7 +131,10 @@ pub fn load(path: &str) -> Result<Document, String> {
     }
     let version = r.u32()?;
     if version > VERSION {
-        return Err(format!("файл сохранён более новой версией Tpaint ({} > {})", version, VERSION));
+        return Err(format!(
+            "файл сохранён более новой версией Tpaint ({} > {})",
+            version, VERSION
+        ));
     }
     let width = r.u32()? as usize;
     let height = r.u32()? as usize;
@@ -147,11 +152,15 @@ pub fn load(path: &str) -> Result<Document, String> {
         if nlen > 4096 {
             return Err("повреждено имя слоя".to_string());
         }
-        let name = String::from_utf8(r.take(nlen)?.to_vec()).map_err(|_| "имя слоя не в UTF-8".to_string())?;
+        let name = String::from_utf8(r.take(nlen)?.to_vec())
+            .map_err(|_| "имя слоя не в UTF-8".to_string())?;
         let visible = r.u8()? != 0;
         let locked = r.u8()? != 0;
         let opacity = r.f32()?.clamp(0.0, 1.0);
-        let blend = BlendMode::ALL.get(r.u32()? as usize).copied().unwrap_or(BlendMode::Normal);
+        let blend = BlendMode::ALL
+            .get(r.u32()? as usize)
+            .copied()
+            .unwrap_or(BlendMode::Normal);
         let plen = r.u32()? as usize;
         let png = r.take(plen)?;
         let img = image::load_from_memory_with_format(png, image::ImageFormat::Png)
@@ -171,7 +180,10 @@ pub fn load(path: &str) -> Result<Document, String> {
                 .map_err(|e| format!("повреждена маска слоя «{}»: {}", name, e))?
                 .to_luma8();
             if mimg.width() as usize != width || mimg.height() as usize != height {
-                return Err(format!("размер маски слоя «{}» не совпадает с холстом", name));
+                return Err(format!(
+                    "размер маски слоя «{}» не совпадает с холстом",
+                    name
+                ));
             }
             mask = Some(mimg.into_raw());
         }
@@ -186,7 +198,10 @@ pub fn load(path: &str) -> Result<Document, String> {
             }
             if glen > 0 {
                 let g = r.take(glen)?;
-                group = Some(String::from_utf8(g.to_vec()).map_err(|_| "имя папки не в UTF-8".to_string())?);
+                group = Some(
+                    String::from_utf8(g.to_vec())
+                        .map_err(|_| "имя папки не в UTF-8".to_string())?,
+                );
             }
             group_open = r.u8()? != 0;
             // Флаг прижатия к нижнему слою — тоже с версии 3.
@@ -328,14 +343,26 @@ mod tests {
         assert_eq!(back.layers.len(), 2);
         assert_eq!(back.active, 1);
         assert_eq!(back.layers[0].meta.name, "Фон");
-        assert_eq!(back.layers[0].pixels[8], 200, "пиксели фона сохранились (R)");
-        assert_eq!(back.layers[0].pixels[9], 100, "пиксели фона сохранились (G)");
-        assert_eq!(back.layers[0].pixels[11], 0, "прозрачность фона сохранилась");
+        assert_eq!(
+            back.layers[0].pixels[8], 200,
+            "пиксели фона сохранились (R)"
+        );
+        assert_eq!(
+            back.layers[0].pixels[9], 100,
+            "пиксели фона сохранились (G)"
+        );
+        assert_eq!(
+            back.layers[0].pixels[11], 0,
+            "прозрачность фона сохранилась"
+        );
         assert_eq!(back.layers[1].meta.name, "Верх");
         assert!((back.layers[1].meta.opacity - 0.42).abs() < 0.001);
         assert_eq!(back.layers[1].meta.blend, BlendMode::Multiply);
         assert!(!back.layers[1].meta.visible, "видимость сохранилась");
-        assert_eq!(back.layers[1].pixels[4], 7, "пиксель верхнего слоя сохранён");
+        assert_eq!(
+            back.layers[1].pixels[4], 7,
+            "пиксель верхнего слоя сохранён"
+        );
     }
 
     #[test]
@@ -347,7 +374,11 @@ mod tests {
             Err(e) => e,
         };
         let _ = std::fs::remove_file(&path);
-        assert!(err.contains("не файл проекта"), "непонятная ошибка: {}", err);
+        assert!(
+            err.contains("не файл проекта"),
+            "непонятная ошибка: {}",
+            err
+        );
     }
 
     #[test]

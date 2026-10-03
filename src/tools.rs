@@ -102,7 +102,10 @@ impl Tool {
     }
 
     pub fn needs_color(self) -> bool {
-        !matches!(self, Tool::Eraser | Tool::Eyedropper | Tool::Pan | Tool::Select)
+        !matches!(
+            self,
+            Tool::Eraser | Tool::Eyedropper | Tool::Pan | Tool::Select
+        )
     }
 }
 
@@ -262,12 +265,48 @@ pub struct BrushPreset {
 }
 
 pub const PRESETS: &[BrushPreset] = &[
-    BrushPreset { name: "Перо", size: 6.0, opacity: 1.0, hardness: 1.0, smoothing: 0.35 },
-    BrushPreset { name: "Тушь", size: 22.0, opacity: 1.0, hardness: 0.95, smoothing: 0.2 },
-    BrushPreset { name: "Акварель", size: 70.0, opacity: 0.35, hardness: 0.25, smoothing: 0.4 },
-    BrushPreset { name: "Карандаш", size: 3.0, opacity: 0.9, hardness: 1.0, smoothing: 0.0 },
-    BrushPreset { name: "Воздух", size: 200.0, opacity: 0.12, hardness: 0.05, smoothing: 0.5 },
-    BrushPreset { name: "Маркер", size: 40.0, opacity: 0.7, hardness: 0.6, smoothing: 0.1 },
+    BrushPreset {
+        name: "Перо",
+        size: 6.0,
+        opacity: 1.0,
+        hardness: 1.0,
+        smoothing: 0.35,
+    },
+    BrushPreset {
+        name: "Тушь",
+        size: 22.0,
+        opacity: 1.0,
+        hardness: 0.95,
+        smoothing: 0.2,
+    },
+    BrushPreset {
+        name: "Акварель",
+        size: 70.0,
+        opacity: 0.35,
+        hardness: 0.25,
+        smoothing: 0.4,
+    },
+    BrushPreset {
+        name: "Карандаш",
+        size: 3.0,
+        opacity: 0.9,
+        hardness: 1.0,
+        smoothing: 0.0,
+    },
+    BrushPreset {
+        name: "Воздух",
+        size: 200.0,
+        opacity: 0.12,
+        hardness: 0.05,
+        smoothing: 0.5,
+    },
+    BrushPreset {
+        name: "Маркер",
+        size: 40.0,
+        opacity: 0.7,
+        hardness: 0.6,
+        smoothing: 0.1,
+    },
 ];
 
 impl BrushPreset {
@@ -282,14 +321,21 @@ impl BrushPreset {
 
 /// Строка панели параметров: что именно показать для активного инструмента.
 pub enum ParamRow {
-    Size { label: &'static str, min: f32, max: f32 },
+    Size {
+        label: &'static str,
+        min: f32,
+        max: f32,
+    },
     Opacity,
     Hardness,
     Tolerance,
     Smoothing,
     GradientSoft,
     /// Флажок; какой именно параметр он включает — решает инструмент.
-    Checkbox { label: &'static str, on: bool },
+    Checkbox {
+        label: &'static str,
+        on: bool,
+    },
     /// Флажок «вертикальный текст» — буквы столбиком.
     VerticalText,
     /// Симметрия мазка: выпадающий список режимов и число лучей.
@@ -307,12 +353,20 @@ pub enum ParamRow {
 pub fn rows_for(tool: Tool) -> Vec<ParamRow> {
     match tool {
         Tool::Pencil => vec![
-            ParamRow::Size { label: "Толщина", min: 1.0, max: 200.0 },
+            ParamRow::Size {
+                label: "Толщина",
+                min: 1.0,
+                max: 200.0,
+            },
             ParamRow::Opacity,
             ParamRow::Smoothing,
         ],
         Tool::Brush => vec![
-            ParamRow::Size { label: "Размер", min: 1.0, max: 500.0 },
+            ParamRow::Size {
+                label: "Размер",
+                min: 1.0,
+                max: 500.0,
+            },
             ParamRow::Opacity,
             ParamRow::Hardness,
             ParamRow::Smoothing,
@@ -323,7 +377,11 @@ pub fn rows_for(tool: Tool) -> Vec<ParamRow> {
             ParamRow::Heal,
         ],
         Tool::Eraser => vec![
-            ParamRow::Size { label: "Размер", min: 1.0, max: 500.0 },
+            ParamRow::Size {
+                label: "Размер",
+                min: 1.0,
+                max: 500.0,
+            },
             ParamRow::Opacity,
             ParamRow::Hardness,
             ParamRow::Smoothing,
@@ -332,28 +390,58 @@ pub fn rows_for(tool: Tool) -> Vec<ParamRow> {
             ParamRow::Symmetry,
         ],
         Tool::Line | Tool::Rect | Tool::Ellipse => {
-            let mut v = vec![ParamRow::Size { label: "Толщина", min: 1.0, max: 200.0 }, ParamRow::Opacity];
+            let mut v = vec![
+                ParamRow::Size {
+                    label: "Толщина",
+                    min: 1.0,
+                    max: 200.0,
+                },
+                ParamRow::Opacity,
+            ];
             if tool != Tool::Line {
-                v.push(ParamRow::Checkbox { label: "Заливка фигуры", on: false });
+                v.push(ParamRow::Checkbox {
+                    label: "Заливка фигуры",
+                    on: false,
+                });
             }
             v
         }
-        Tool::Fill => vec![ParamRow::Opacity, ParamRow::Tolerance, ParamRow::Checkbox { label: "Ограничить область", on: true }],
+        Tool::Fill => vec![
+            ParamRow::Opacity,
+            ParamRow::Tolerance,
+            ParamRow::Checkbox {
+                label: "Ограничить область",
+                on: true,
+            },
+        ],
         Tool::Gradient => vec![ParamRow::Opacity, ParamRow::GradientSoft],
         Tool::Select => vec![
-            ParamRow::Checkbox { label: "Залить выделение", on: false },
+            ParamRow::Checkbox {
+                label: "Залить выделение",
+                on: false,
+            },
             ParamRow::Tolerance,
         ],
         Tool::EllipseSelect => vec![],
         Tool::Wand => vec![
             ParamRow::Tolerance,
-            ParamRow::Checkbox { label: "Ограничить область", on: true },
+            ParamRow::Checkbox {
+                label: "Ограничить область",
+                on: true,
+            },
         ],
         Tool::Polygon => vec![],
         Tool::Text => vec![
-            ParamRow::Size { label: "Кегль", min: 8.0, max: 240.0 },
+            ParamRow::Size {
+                label: "Кегль",
+                min: 8.0,
+                max: 240.0,
+            },
             ParamRow::Opacity,
-            ParamRow::Checkbox { label: "Жирный", on: false },
+            ParamRow::Checkbox {
+                label: "Жирный",
+                on: false,
+            },
             ParamRow::VerticalText,
         ],
         Tool::Eyedropper | Tool::Pan => vec![],
@@ -370,9 +458,17 @@ mod tests {
         for preset in PRESETS {
             preset.apply(&mut p);
             assert_eq!(p.size, preset.size, "размер пресета «{}»", preset.name);
-            assert_eq!(p.opacity, preset.opacity, "непрозрачность «{}»", preset.name);
+            assert_eq!(
+                p.opacity, preset.opacity,
+                "непрозрачность «{}»",
+                preset.name
+            );
             assert_eq!(p.hardness, preset.hardness, "мягкость «{}»", preset.name);
-            assert_eq!(p.smoothing, preset.smoothing, "сглаживание «{}»", preset.name);
+            assert_eq!(
+                p.smoothing, preset.smoothing,
+                "сглаживание «{}»",
+                preset.name
+            );
             assert!((0.0..=1.0).contains(&p.opacity), "непрозрачность вне 0..1");
             assert!((0.0..=1.0).contains(&p.hardness), "мягкость вне 0..1");
             assert!((0.0..=1.0).contains(&p.smoothing), "сглаживание вне 0..1");

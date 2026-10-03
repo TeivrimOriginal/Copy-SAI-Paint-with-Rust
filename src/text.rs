@@ -1,4 +1,4 @@
-﻿//! Текст: загрузка системного шрифта, растеризация глифов в атлас, выдача квадов.
+//! Текст: загрузка системного шрифта, растеризация глифов в атлас, выдача квадов.
 //!
 //! Шрифты берутся из системной папки Windows (с возможностью переопределить
 //! файлом в `fonts/` рядом с программой), поэтому в репозитории нет
@@ -148,9 +148,17 @@ impl Fonts {
                     if tx < 0.0 || tx as usize >= w {
                         continue;
                     }
-                    layer.blend(w, tx as usize, ty as usize, [
-                        color[0], color[1], color[2], (a.min(1.0) * 255.0).round() as u8,
-                    ]);
+                    layer.blend(
+                        w,
+                        tx as usize,
+                        ty as usize,
+                        [
+                            color[0],
+                            color[1],
+                            color[2],
+                            (a.min(1.0) * 255.0).round() as u8,
+                        ],
+                    );
                 }
             }
             pen += adv;
@@ -219,9 +227,17 @@ impl Fonts {
                     if tx < 0.0 || tx as usize >= w {
                         continue;
                     }
-                    layer.blend(w, tx as usize, ty as usize, [
-                        color[0], color[1], color[2], (a.min(1.0) * 255.0).round() as u8,
-                    ]);
+                    layer.blend(
+                        w,
+                        tx as usize,
+                        ty as usize,
+                        [
+                            color[0],
+                            color[1],
+                            color[2],
+                            (a.min(1.0) * 255.0).round() as u8,
+                        ],
+                    );
                 }
             }
             pen += step;
@@ -231,7 +247,9 @@ impl Fonts {
     /// Высота букв над базовой линией — нужна, чтобы поставить строку
     /// по верхнему краю, как это делает инструмент «Текст».
     pub fn ascent(&self, size: f32) -> f32 {
-        self.font(Weight::Regular).as_scaled(PxScale::from(size)).ascent()
+        self.font(Weight::Regular)
+            .as_scaled(PxScale::from(size))
+            .ascent()
     }
 
     /// Шаг строки по вертикали: столько занимает одна буква в колонке.
@@ -270,13 +288,27 @@ impl Fonts {
         let adv = font.as_scaled(PxScale::from(size)).h_advance(gid);
         let glyph = sf.scaled_glyph(ch);
         let entry = match font.outline_glyph(glyph) {
-            None => Some(GlyphEntry { u: [0.0; 4], w: 0.0, h: 0.0, ox: 0.0, oy: 0.0, adv }),
+            None => Some(GlyphEntry {
+                u: [0.0; 4],
+                w: 0.0,
+                h: 0.0,
+                ox: 0.0,
+                oy: 0.0,
+                adv,
+            }),
             Some(o) => {
                 let b = o.px_bounds();
                 let w = (b.max.x - b.min.x).ceil() as usize;
                 let h = (b.max.y - b.min.y).ceil() as usize;
                 if w == 0 || h == 0 || w >= ATLAS_SIZE || h >= ATLAS_SIZE {
-                    Some(GlyphEntry { u: [0.0; 4], w: 0.0, h: 0.0, ox: 0.0, oy: 0.0, adv })
+                    Some(GlyphEntry {
+                        u: [0.0; 4],
+                        w: 0.0,
+                        h: 0.0,
+                        ox: 0.0,
+                        oy: 0.0,
+                        adv,
+                    })
                 } else {
                     let gw = w + PAD as usize * 2;
                     let gh = h + PAD as usize * 2;
@@ -320,7 +352,12 @@ impl Fonts {
                     // разделены на SS.
                     let a = ATLAS_SIZE as f32;
                     Some(GlyphEntry {
-                        u: [x0 as f32 / a, y0 as f32 / a, (x0 + gw) as f32 / a, (y0 + gh) as f32 / a],
+                        u: [
+                            x0 as f32 / a,
+                            y0 as f32 / a,
+                            (x0 + gw) as f32 / a,
+                            (y0 + gh) as f32 / a,
+                        ],
                         w: gw as f32 / SS,
                         h: gh as f32 / SS,
                         ox: b.min.x / SS - PAD as f32 / SS,
@@ -357,11 +394,7 @@ impl Fonts {
                 if g.w > 0.0 && g.h > 0.0 {
                     let gx = (pen + g.ox).round();
                     let gy = (y + g.oy).round();
-                    out.push((
-                        [gx, gy, gx + g.w, gy + g.h],
-                        g.u,
-                        0.0,
-                    ));
+                    out.push(([gx, gy, gx + g.w, gy + g.h], g.u, 0.0));
                 }
                 pen += g.adv;
             }
@@ -395,7 +428,15 @@ pub fn draw_text(
     };
     let baseline = y + fonts.ascent(size);
     fonts.draw_to_layer(
-        layer, w, h, s, x, baseline, size, color, opacity,
+        layer,
+        w,
+        h,
+        s,
+        x,
+        baseline,
+        size,
+        color,
+        opacity,
         if bold { Weight::Bold } else { Weight::Regular },
     );
 }
@@ -422,12 +463,21 @@ pub fn draw_text_vertical(
         }
     };
     fonts.draw_vertical_to_layer(
-        layer, w, h, s, x, y, size, color, opacity,
+        layer,
+        w,
+        h,
+        s,
+        x,
+        y,
+        size,
+        color,
+        opacity,
         if bold { Weight::Bold } else { Weight::Regular },
     );
 }
 
-fn load_font(names: &[&str]) -> Option<FontVec> {    for n in names {
+fn load_font(names: &[&str]) -> Option<FontVec> {
+    for n in names {
         let mut tried = Vec::new();
         if let Ok(exe) = std::env::current_exe() {
             if let Some(dir) = exe.parent() {
@@ -485,12 +535,33 @@ mod tests {
         let (w, h) = (120usize, 60usize);
         let mut l = Layer::new(w, h, "тест");
         // Якорь — левый верхний угол строки (10, 10), кегль 32.
-        draw_text(&mut l, w, h, "AB", 10.0, 10.0, 32.0, [255, 0, 0, 255], 1.0, false);
+        draw_text(
+            &mut l,
+            w,
+            h,
+            "AB",
+            10.0,
+            10.0,
+            32.0,
+            [255, 0, 0, 255],
+            1.0,
+            false,
+        );
         let painted = l.pixels.chunks(4).filter(|p| p[3] > 0).count();
-        assert!(painted > 30, "текст должен нарисоваться, нарисовано пикселей: {}", painted);
+        assert!(
+            painted > 30,
+            "текст должен нарисоваться, нарисовано пикселей: {}",
+            painted
+        );
         // Ничего не должно быть выше якоря и левее него.
-        let left = (0..w).flat_map(|x| (0..h).map(move |y| (x, y))).filter(|(x, y)| *x < 10 && l.get(w, *x, *y)[3] > 0).count();
-        let above = (0..w).flat_map(|x| (0..h).map(move |y| (x, y))).filter(|(x, y)| *y < 10 && l.get(w, *x, *y)[3] > 0).count();
+        let left = (0..w)
+            .flat_map(|x| (0..h).map(move |y| (x, y)))
+            .filter(|(x, y)| *x < 10 && l.get(w, *x, *y)[3] > 0)
+            .count();
+        let above = (0..w)
+            .flat_map(|x| (0..h).map(move |y| (x, y)))
+            .filter(|(x, y)| *y < 10 && l.get(w, *x, *y)[3] > 0)
+            .count();
         assert_eq!(left, 0, "левее якоря пусто");
         assert_eq!(above, 0, "выше якоря пусто");
     }
@@ -501,7 +572,18 @@ mod tests {
         let (w, h) = (160usize, 60usize);
         // «A,у» — буква, запятая и буква с хвостом: базовая линия у них одна.
         let mut l = Layer::new(w, h, "тест");
-        draw_text(&mut l, w, h, "A,у", 10.0, 10.0, 32.0, [0, 0, 0, 255], 1.0, false);
+        draw_text(
+            &mut l,
+            w,
+            h,
+            "A,у",
+            10.0,
+            10.0,
+            32.0,
+            [0, 0, 0, 255],
+            1.0,
+            false,
+        );
         // Границы буквы «A» по колонке 14.
         let a_rows: Vec<usize> = (0..h).filter(|y| l.get(w, 14, *y)[3] > 40).collect();
         assert!(!a_rows.is_empty(), "буква A нарисована");
@@ -512,8 +594,18 @@ mod tests {
         let comma_rows: Vec<usize> = (0..h).filter(|y| l.get(w, 26, *y)[3] > 40).collect();
         assert!(!comma_rows.is_empty(), "запятая нарисована");
         let (c_top, c_bottom) = (*comma_rows.first().unwrap(), *comma_rows.last().unwrap());
-        assert!(c_top > a_top + 5, "запятая ниже верха буквы: {} против {}", c_top, a_top);
-        assert!(c_bottom >= baseline, "хвост запятой уходит под базовую линию: {} / {}", c_bottom, baseline);
+        assert!(
+            c_top > a_top + 5,
+            "запятая ниже верха буквы: {} против {}",
+            c_top,
+            a_top
+        );
+        assert!(
+            c_bottom >= baseline,
+            "хвост запятой уходит под базовую линию: {} / {}",
+            c_bottom,
+            baseline
+        );
         // У «у» хвост есть ниже базовой линии — ищем его в третьем глифе.
         let tail_cols: Vec<usize> = (28..80)
             .filter(|x| (baseline..h).filter(|y| l.get(w, *x, *y)[3] > 40).count() > 0)

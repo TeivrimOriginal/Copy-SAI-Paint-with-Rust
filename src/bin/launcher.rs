@@ -18,7 +18,7 @@ use tpaint::app::{DialogMode, FileDialog};
 use tpaint::layout::{file_dialog, Action};
 use tpaint::renderer::Renderer;
 use tpaint::text::Fonts;
-use tpaint::ui::{theme, FONT_SMALL, FONT_UI, KeyEv, Ui, PAD};
+use tpaint::ui::{theme, KeyEv, Ui, FONT_SMALL, FONT_UI, PAD};
 
 const WIN_W: u32 = 620;
 const WIN_H: u32 = 520;
@@ -66,7 +66,9 @@ fn main() {
     };
     glfw.window_hint(glfw::WindowHint::ContextVersionMajor(3));
     glfw.window_hint(glfw::WindowHint::ContextVersionMinor(3));
-    glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+    glfw.window_hint(glfw::WindowHint::OpenGlProfile(
+        glfw::OpenGlProfileHint::Core,
+    ));
     glfw.window_hint(glfw::WindowHint::Resizable(false));
     // Без MSAA: иначе мелкий текст мылится (см. main.rs).
     glfw.window_hint(glfw::WindowHint::Samples(None));
@@ -102,7 +104,11 @@ fn main() {
 
     let mut prev = (false, false);
     // Сколько кадров ещё осталось до снимка (0 — не снимаем).
-    let mut shot_frame = if std::env::var("TPAINT_LAUNCHER_SHOT").is_ok() { 6 } else { 0 };
+    let mut shot_frame = if std::env::var("TPAINT_LAUNCHER_SHOT").is_ok() {
+        6
+    } else {
+        0
+    };
     // Атлас глифов перезаливаем только когда нарисованы новые символы.
     let mut atlas_rev = u64::MAX;
     while !window.should_close() {
@@ -160,7 +166,11 @@ fn main() {
         let mut actions: Vec<Action> = Vec::new();
         build(&mut ui, &mut st, fw as f32, fh as f32, &mut actions);
         if ui.fonts.atlas_rev != atlas_rev {
-            renderer.update_atlas(&ui.fonts.atlas, tpaint::text::ATLAS_SIZE, tpaint::text::ATLAS_SIZE);
+            renderer.update_atlas(
+                &ui.fonts.atlas,
+                tpaint::text::ATLAS_SIZE,
+                tpaint::text::ATLAS_SIZE,
+            );
             atlas_rev = ui.fonts.atlas_rev;
         }
         ui.end();
@@ -192,7 +202,14 @@ fn build(ui: &mut Ui, st: &mut LaunchState, w: f32, h: f32, actions: &mut Vec<Ac
 
     // Заголовок
     ui.text(PAD * 2.0, y, "Tpaint", FONT_UI + 10.0, theme::TEXT, true);
-    ui.text(PAD * 2.0, y + 26.0, "Растровый редактор — выберите, с чего начать", FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        PAD * 2.0,
+        y + 26.0,
+        "Растровый редактор — выберите, с чего начать",
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
     y += 56.0;
     ui.quad([PAD * 2.0, y, w - PAD * 2.0, y + 1.0], theme::BORDER);
     y += 16.0;
@@ -218,10 +235,24 @@ fn build(ui: &mut Ui, st: &mut LaunchState, w: f32, h: f32, actions: &mut Vec<Ac
     let half = (w - PAD * 4.0) / 2.0;
     let mut cw = st.custom_w;
     let mut ch = st.custom_h;
-    if ui.value_field([PAD * 2.0, y, PAD * 2.0 + half - 6.0, y + 22.0], "Ширина", &mut cw, 16.0, 8192.0, 10.0) {
+    if ui.value_field(
+        [PAD * 2.0, y, PAD * 2.0 + half - 6.0, y + 22.0],
+        "Ширина",
+        &mut cw,
+        16.0,
+        8192.0,
+        10.0,
+    ) {
         st.custom_w = cw;
     }
-    if ui.value_field([PAD * 2.0 + half + 6.0, y, w - PAD * 2.0, y + 22.0], "Высота", &mut ch, 16.0, 8192.0, 10.0) {
+    if ui.value_field(
+        [PAD * 2.0 + half + 6.0, y, w - PAD * 2.0, y + 22.0],
+        "Высота",
+        &mut ch,
+        16.0,
+        8192.0,
+        10.0,
+    ) {
         st.custom_h = ch;
     }
     y += 30.0;
@@ -231,10 +262,21 @@ fn build(ui: &mut Ui, st: &mut LaunchState, w: f32, h: f32, actions: &mut Vec<Ac
     if ui.button([PAD * 2.0, y, PAD * 2.0 + bw, y + 30.0], "Создать") {
         new_document(st);
     }
-    if ui.button([PAD * 2.0 + bw + 6.0, y, PAD * 2.0 + bw * 2.0 + 6.0, y + 30.0], "Открыть проект…") {
+    if ui.button(
+        [
+            PAD * 2.0 + bw + 6.0,
+            y,
+            PAD * 2.0 + bw * 2.0 + 6.0,
+            y + 30.0,
+        ],
+        "Открыть проект…",
+    ) {
         st.dialog = Some(FileDialog::new(DialogMode::OpenProject, ""));
     }
-    if ui.button([PAD * 2.0 + bw * 2.0 + 12.0, y, w - PAD * 2.0, y + 30.0], "Открыть картинку…") {
+    if ui.button(
+        [PAD * 2.0 + bw * 2.0 + 12.0, y, w - PAD * 2.0, y + 30.0],
+        "Открыть картинку…",
+    ) {
         st.dialog = Some(FileDialog::new(DialogMode::ImportImage, ""));
     }
     y += 42.0;
@@ -268,11 +310,22 @@ fn build(ui: &mut Ui, st: &mut LaunchState, w: f32, h: f32, actions: &mut Vec<Ac
     ui.quad([0.0, sy - 6.0, w, h], theme::PANEL);
     ui.quad([0.0, sy - 6.0, w, sy - 5.0], theme::BORDER);
     let text = if st.status.is_empty() {
-        format!("Новый документ: {}×{}", st.custom_w.round() as i32, st.custom_h.round() as i32)
+        format!(
+            "Новый документ: {}×{}",
+            st.custom_w.round() as i32,
+            st.custom_h.round() as i32
+        )
     } else {
         st.status.clone()
     };
-    ui.text(PAD * 2.0, sy + 4.0, &text, FONT_SMALL, theme::TEXT_DIM, false);
+    ui.text(
+        PAD * 2.0,
+        sy + 4.0,
+        &text,
+        FONT_SMALL,
+        theme::TEXT_DIM,
+        false,
+    );
     let _ = lh;
 
     // Окно файлов — то же, что в редакторе.
@@ -291,7 +344,15 @@ fn save_framebuffer(w: i32, h: i32) -> Option<String> {
     let mut buf = vec![0u8; (w as usize) * (h as usize) * 4];
     unsafe {
         ::gl::PixelStorei(::gl::PACK_ALIGNMENT, 1);
-        ::gl::ReadPixels(0, 0, w, h, ::gl::RGBA, ::gl::UNSIGNED_BYTE, buf.as_mut_ptr() as *mut _);
+        ::gl::ReadPixels(
+            0,
+            0,
+            w,
+            h,
+            ::gl::RGBA,
+            ::gl::UNSIGNED_BYTE,
+            buf.as_mut_ptr() as *mut _,
+        );
     }
     let stride = w as usize * 4;
     let mut img = image::RgbaImage::new(w as u32, h as u32);
@@ -328,7 +389,10 @@ fn editor_path() -> Option<PathBuf> {
     if beside.is_file() {
         return Some(beside);
     }
-    if dir.file_name().is_some_and(|n| n == "debug" || n == "release") {
+    if dir
+        .file_name()
+        .is_some_and(|n| n == "debug" || n == "release")
+    {
         let up = dir.join("..").join("tpaint.exe");
         if up.is_file() {
             return Some(up.canonicalize().unwrap_or(up));
@@ -345,8 +409,12 @@ fn recent_file() -> Option<PathBuf> {
 }
 
 fn read_recent() -> Vec<PathBuf> {
-    let Some(path) = recent_file() else { return Vec::new() };
-    let Ok(text) = std::fs::read_to_string(path) else { return Vec::new() };
+    let Some(path) = recent_file() else {
+        return Vec::new();
+    };
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
     let mut out: Vec<PathBuf> = text
         .lines()
         .map(str::trim)
@@ -368,7 +436,10 @@ fn push_recent(path: &str) {
     list.retain(|p| p.to_string_lossy() != path);
     list.insert(0, PathBuf::from(path));
     list.truncate(MAX_RECENT);
-    let text: Vec<String> = list.iter().map(|p| p.to_string_lossy().into_owned()).collect();
+    let text: Vec<String> = list
+        .iter()
+        .map(|p| p.to_string_lossy().into_owned())
+        .collect();
     let _ = std::fs::write(file, text.join("\n"));
 }
 
@@ -381,7 +452,9 @@ fn new_document(st: &mut LaunchState) {
 
 /// Забирает выбранный в окне файл и запускает с ним редактор.
 fn take_dialog_result(st: &mut LaunchState) {
-    let Some(dlg) = st.dialog.as_mut() else { return };
+    let Some(dlg) = st.dialog.as_mut() else {
+        return;
+    };
     if let Some((path, _mode)) = dlg.result.take() {
         push_recent(&path);
         st.launch = Some(vec![path]);

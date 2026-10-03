@@ -3,13 +3,16 @@
 //! Никаких Win32-контролов: окно создаёт GLFW, интерфейс рисует собственный
 //! immediate-mode UI на OpenGL, текст растеризуется системным шрифтом.
 
+use glfw::{
+    Action as GAction, Context, Key, MouseButtonLeft, MouseButtonMiddle, MouseButtonRight,
+    WindowEvent,
+};
 use tpaint::app::{App, CanvasOp, DialogMode, FileDialog, PathKind};
 use tpaint::layout::Action;
 use tpaint::renderer::Renderer;
 use tpaint::text::Fonts;
 use tpaint::tools::Tool;
 use tpaint::ui::{KeyEv, Ui};
-use glfw::{Action as GAction, Context, Key, MouseButtonLeft, MouseButtonMiddle, MouseButtonRight, WindowEvent};
 
 const WIN_W: u32 = 1400;
 const WIN_H: u32 = 900;
@@ -41,7 +44,15 @@ fn save_framebuffer(w: i32, h: i32) -> Option<String> {
     let mut buf = vec![0u8; (w as usize) * (h as usize) * 4];
     unsafe {
         ::gl::PixelStorei(::gl::PACK_ALIGNMENT, 1);
-        ::gl::ReadPixels(0, 0, w, h, ::gl::RGBA, ::gl::UNSIGNED_BYTE, buf.as_mut_ptr() as *mut _);
+        ::gl::ReadPixels(
+            0,
+            0,
+            w,
+            h,
+            ::gl::RGBA,
+            ::gl::UNSIGNED_BYTE,
+            buf.as_mut_ptr() as *mut _,
+        );
     }
     // В OpenGL строки идут снизу вверх — переворачиваем.
     let stride = w as usize * 4;
@@ -87,7 +98,9 @@ fn main() {
     };
     glfw.window_hint(glfw::WindowHint::ContextVersionMajor(3));
     glfw.window_hint(glfw::WindowHint::ContextVersionMinor(3));
-    glfw.window_hint(glfw::WindowHint::OpenGlProfile(glfw::OpenGlProfileHint::Core));
+    glfw.window_hint(glfw::WindowHint::OpenGlProfile(
+        glfw::OpenGlProfileHint::Core,
+    ));
     glfw.window_hint(glfw::WindowHint::Resizable(true));
     // MSAA выключен намеренно: он сглаживает края квадов глифов, и мелкий
     // текст превращается в мыло. Панели и холст состоят из прямоугольников,
@@ -95,7 +108,12 @@ fn main() {
     glfw.window_hint(glfw::WindowHint::Samples(None));
 
     let (mut window, events) = glfw
-        .create_window(WIN_W, WIN_H, "Tpaint — растровый редактор", glfw::WindowMode::Windowed)
+        .create_window(
+            WIN_W,
+            WIN_H,
+            "Tpaint — растровый редактор",
+            glfw::WindowMode::Windowed,
+        )
         .expect("не удалось создать окно GLFW");
     // Без этого события (клавиши, символы, колесо, закрытие и ресайз окна)
     // не доходят до приложения: в glfw-rs 0.17 callbacks ставятся явно.
@@ -261,7 +279,9 @@ fn main() {
                                 match shortcut(key, ctrl, shift) {
                                     Some(Short::Undo) => app.undo(),
                                     Some(Short::Redo) => app.redo(),
-                                    Some(Short::New) => app.new_document(app.doc.width, app.doc.height),
+                                    Some(Short::New) => {
+                                        app.new_document(app.doc.width, app.doc.height)
+                                    }
                                     Some(Short::Open) => {
                                         if shift {
                                             file_dialog(&mut app, DialogMode::ImportImage)
@@ -270,7 +290,9 @@ fn main() {
                                         }
                                     }
                                     Some(Short::Save) => save_now(&mut app),
-                                    Some(Short::SaveAs) => file_dialog(&mut app, DialogMode::SaveProject),
+                                    Some(Short::SaveAs) => {
+                                        file_dialog(&mut app, DialogMode::SaveProject)
+                                    }
                                     Some(Short::Fit) => app.fit_pending = true,
                                     Some(Short::Zoom100) => {
                                         app.zoom = 1.0;
@@ -282,7 +304,9 @@ fn main() {
                                     Some(Short::Smaller) => {
                                         app.params.size = (app.params.size - 2.0).max(1.0)
                                     }
-                                    Some(Short::Bigger) => app.params.size = (app.params.size + 2.0).min(800.0),
+                                    Some(Short::Bigger) => {
+                                        app.params.size = (app.params.size + 2.0).min(800.0)
+                                    }
                                     Some(Short::Tool(t)) => {
                                         // Незакрытый контур многоугольника теряет смысл.
                                         app.cancel_polygon();
@@ -376,7 +400,10 @@ fn main() {
             let inside = app.in_canvas(mouse);
             app.cursor_screen = mouse;
             app.cursor_in_canvas = inside
-                && !matches!(app.tool, tpaint::tools::Tool::Eyedropper | tpaint::tools::Tool::Pan)
+                && !matches!(
+                    app.tool,
+                    tpaint::tools::Tool::Eyedropper | tpaint::tools::Tool::Pan
+                )
                 && !app.tool.is_selection();
 
             // панорамирование: средняя кнопка, пробел+левая, инструмент «Рука»
@@ -405,7 +432,13 @@ fn main() {
                         }
                     }
                     if transform_dragging {
-                        app.transform_drag(cp, app.transform.as_ref().map(|t| t.grab).unwrap_or(tpaint::app::TransformGrab::None));
+                        app.transform_drag(
+                            cp,
+                            app.transform
+                                .as_ref()
+                                .map(|t| t.grab)
+                                .unwrap_or(tpaint::app::TransformGrab::None),
+                        );
                     }
                     if released_l || released_r {
                         app.transform_grab_end();
@@ -439,7 +472,10 @@ fn main() {
             } else if app.floating.is_some() && app.sel_drag == tpaint::app::SelDrag::None {
                 app.move_select(cp);
             }
-            if (released_l && drawing_left) || (released_r && drawing_right) || (!inside && (left || right)) {
+            if (released_l && drawing_left)
+                || (released_r && drawing_right)
+                || (!inside && (left || right))
+            {
                 app.end_stroke();
                 app.end_select();
                 drawing_left = false;
@@ -484,7 +520,11 @@ fn main() {
             last_rev = app.doc.shown_rev;
         }
         if ui.fonts.atlas_rev != last_atlas_rev {
-            renderer.update_atlas(&ui.fonts.atlas, tpaint::text::ATLAS_SIZE, tpaint::text::ATLAS_SIZE);
+            renderer.update_atlas(
+                &ui.fonts.atlas,
+                tpaint::text::ATLAS_SIZE,
+                tpaint::text::ATLAS_SIZE,
+            );
             last_atlas_rev = ui.fonts.atlas_rev;
         }
         // Маска выделения — перезаливается только при изменении.
@@ -531,7 +571,13 @@ fn main() {
         // Снимок кадра читаем до обмена буферов: задний буфер и есть кадр.
         let moved = match last_mouse {
             None => false,
-            Some(p) => (mouse.0 - p.0).abs() > 0.5 || (mouse.1 - p.1).abs() > 0.5 || left || right || middle,
+            Some(p) => {
+                (mouse.0 - p.0).abs() > 0.5
+                    || (mouse.1 - p.1).abs() > 0.5
+                    || left
+                    || right
+                    || middle
+            }
         };
         last_mouse = Some(mouse);
         if moved {
@@ -644,7 +690,11 @@ fn key_to_text(key: Key, ctrl: bool) -> Option<KeyEv> {
 fn current_dir(app: &App) -> String {
     app.path
         .as_ref()
-        .and_then(|p| std::path::Path::new(p).parent().map(|d| d.to_string_lossy().into_owned()))
+        .and_then(|p| {
+            std::path::Path::new(p)
+                .parent()
+                .map(|d| d.to_string_lossy().into_owned())
+        })
         .unwrap_or_default()
 }
 
@@ -684,8 +734,8 @@ fn apply(app: &mut App, a: Action) {
         Action::ExportPng => file_dialog(app, DialogMode::ExportPng),
         Action::ExportPngAlpha => file_dialog(app, DialogMode::ExportPngAlpha),
         Action::ExportJpeg => file_dialog(app, DialogMode::ExportJpeg),
-    Action::OpenPsd => file_dialog(app, DialogMode::OpenPsd),
-    Action::ExportPsd => file_dialog(app, DialogMode::ExportPsd),
+        Action::OpenPsd => file_dialog(app, DialogMode::OpenPsd),
+        Action::ExportPsd => file_dialog(app, DialogMode::ExportPsd),
         Action::Quit => {}
         Action::Undo => app.undo(),
         Action::Redo => app.redo(),
@@ -717,9 +767,14 @@ fn apply(app: &mut App, a: Action) {
             app.show_grid = true;
         }
         Action::ToggleRulers => app.show_rulers = !app.show_rulers,
-    Action::ToggleNav => {        app.show_nav = !app.show_nav;
-        app.notify(if app.show_nav { "Навигатор включён" } else { "Навигатор выключен" });
-    }
+        Action::ToggleNav => {
+            app.show_nav = !app.show_nav;
+            app.notify(if app.show_nav {
+                "Навигатор включён"
+            } else {
+                "Навигатор выключен"
+            });
+        }
         Action::CenterGuides => {
             app.guides.push((app.doc.width as f32 / 2.0, false));
             app.guides.push((app.doc.height as f32 / 2.0, true));
@@ -731,15 +786,27 @@ fn apply(app: &mut App, a: Action) {
         }
         Action::SnapGuides => {
             app.snap_guides = !app.snap_guides;
-            app.notify(if app.snap_guides { "Привязка к направляющим" } else { "Привязка к направляющим выключена" });
+            app.notify(if app.snap_guides {
+                "Привязка к направляющим"
+            } else {
+                "Привязка к направляющим выключена"
+            });
         }
         Action::SnapGrid => {
             app.snap_grid = !app.snap_grid;
-            app.notify(if app.snap_grid { "Привязка к сетке" } else { "Привязка к сетке выключена" });
+            app.notify(if app.snap_grid {
+                "Привязка к сетке"
+            } else {
+                "Привязка к сетке выключена"
+            });
         }
         Action::SnapAngle => {
             app.snap_angle = !app.snap_angle;
-            app.notify(if app.snap_angle { "Шаг угла 15°" } else { "Шаг угла выключен" });
+            app.notify(if app.snap_angle {
+                "Шаг угла 15°"
+            } else {
+                "Шаг угла выключен"
+            });
         }
         Action::CanvasSize(w, h) => app.resize_canvas(w, h),
         Action::CanvasSizeDialog => {
@@ -757,10 +824,10 @@ fn apply(app: &mut App, a: Action) {
         Action::FlipLayerH => app.flip_layer(true),
         Action::FlipLayerV => app.flip_layer(false),
         Action::OpenFilters => app.open_filters(),
-    Action::OpenCurves => app.open_curves(),
-    Action::OpenLevels => app.open_levels(),
-    Action::OpenHsv => app.open_hsv(),
-    Action::OpenBalance => app.open_balance(),
+        Action::OpenCurves => app.open_curves(),
+        Action::OpenLevels => app.open_levels(),
+        Action::OpenHsv => app.open_hsv(),
+        Action::OpenBalance => app.open_balance(),
         Action::FreeTransform => app.begin_transform(),
         Action::AddMask => app.add_mask_from_selection(),
         Action::MaskWhite => app.fill_mask(true),
@@ -820,4 +887,3 @@ mod tests {
         assert_eq!(parse_size("99999x10"), None);
     }
 }
-

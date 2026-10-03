@@ -1,5 +1,7 @@
 ﻿# Tpaint — растровый редактор в духе Clip Studio
 
+![CI](https://github.com/TeivrimOriginal/Copy-SAI-Paint-with-Rust/actions/workflows/ci.yml/badge.svg)
+
 Графический редактор для Windows на **Rust**: окно и OpenGL-контекст создаёт **GLFW**,
 весь интерфейс (панели, кнопки, колорпикер, текст) рисуется собственным
 immediate-mode UI на OpenGL. Никаких Win32-контролов и системных диалогов —
@@ -295,6 +297,12 @@ OpenGL), `ab_glyph` (шрифт), `image` (PNG).
 в репозитории нет бинарных шрифтов.
 
 ## Тесты
+
+158 юнит-тестов, все логические: растеризация, PSD, формат проекта, геометрия
+документа. Ни один не открывает окно и не создаёт GL-контекст, поэтому набор
+проходит без дисплея. CI гоняет `cargo fmt --check`, `cargo clippy -D warnings`
+и `cargo test` на каждом пуше — на Windows, потому что линковщику нужны
+`opengl32`/`user32`, а `glfw-sys` собирает GLFW через CMake.
 
 ```bat
 cargo test

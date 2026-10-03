@@ -23,8 +23,28 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn new(x0: f32, y0: f32, x1: f32, y1: f32, color: [f32; 4], unit: u8, clip: [f32; 4]) -> Self {
-        Self { x0, y0, x1, y1, u0: 0.0, v0: 0.0, u1: 1.0, v1: 1.0, color, unit, clip }
+    pub fn new(
+        x0: f32,
+        y0: f32,
+        x1: f32,
+        y1: f32,
+        color: [f32; 4],
+        unit: u8,
+        clip: [f32; 4],
+    ) -> Self {
+        Self {
+            x0,
+            y0,
+            x1,
+            y1,
+            u0: 0.0,
+            v0: 0.0,
+            u1: 1.0,
+            v1: 1.0,
+            color,
+            unit,
+            clip,
+        }
     }
 }
 
@@ -51,8 +71,16 @@ pub const UNIT_SEL: u8 = 8;
 /// Слой поверх панелей, но под текстом: им рисуется раскрытый список.
 pub const UNIT_TOP: u8 = 9;
 pub const PASSES: [u8; 10] = [
-    UNIT_BG, UNIT_CHECKER, UNIT_CANVAS, UNIT_FLOAT, UNIT_SEL, UNIT_SOLID, UNIT_THUMBS, UNIT_MASKS,
-    UNIT_TOP, UNIT_ATLAS,
+    UNIT_BG,
+    UNIT_CHECKER,
+    UNIT_CANVAS,
+    UNIT_FLOAT,
+    UNIT_SEL,
+    UNIT_SOLID,
+    UNIT_THUMBS,
+    UNIT_MASKS,
+    UNIT_TOP,
+    UNIT_ATLAS,
 ];
 
 /// Атлас миниатюр: сетка 8×8 ячеек по 64 px (до 64 слоёв).
@@ -120,7 +148,10 @@ pub struct Renderer {
 
 impl Renderer {
     pub fn new(width: i32, height: i32) -> Self {
-        let (vs, fs) = (compile(::gl::VERTEX_SHADER, VS), compile(::gl::FRAGMENT_SHADER, FS));
+        let (vs, fs) = (
+            compile(::gl::VERTEX_SHADER, VS),
+            compile(::gl::FRAGMENT_SHADER, FS),
+        );
         unsafe {
             let prog = ::gl::CreateProgram();
             ::gl::AttachShader(prog, vs);
@@ -196,7 +227,12 @@ impl Renderer {
             ::gl::Disable(::gl::DEPTH_TEST);
             ::gl::Disable(::gl::CULL_FACE);
             ::gl::Enable(::gl::BLEND);
-            ::gl::BlendFuncSeparate(::gl::SRC_ALPHA, ::gl::ONE_MINUS_SRC_ALPHA, ::gl::ONE, ::gl::ONE_MINUS_SRC_ALPHA);
+            ::gl::BlendFuncSeparate(
+                ::gl::SRC_ALPHA,
+                ::gl::ONE_MINUS_SRC_ALPHA,
+                ::gl::ONE,
+                ::gl::ONE_MINUS_SRC_ALPHA,
+            );
             ::gl::PixelStorei(::gl::UNPACK_ALIGNMENT, 1);
         }
     }
@@ -204,15 +240,38 @@ impl Renderer {
     fn init_canvas(&self) {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_canvas);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_S, ::gl::CLAMP_TO_EDGE as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_T, ::gl::CLAMP_TO_EDGE as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_S,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_T,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
             // Заглушка 1×1, чтобы первый кадр ничего не читал из пустой памяти.
             let white: [u8; 4] = [255, 255, 255, 255];
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, 1, 1, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, white.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                1,
+                1,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                white.as_ptr() as *const _,
             );
         }
     }
@@ -233,13 +292,28 @@ impl Renderer {
         }
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_pattern);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::NEAREST as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::NEAREST as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::NEAREST as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::NEAREST as i32,
+            );
             ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_S, ::gl::REPEAT as i32);
             ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_T, ::gl::REPEAT as i32);
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, 16, 16, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, px.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                16,
+                16,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                px.as_ptr() as *const _,
             );
         }
     }
@@ -249,13 +323,36 @@ impl Renderer {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_atlas);
             // Мипмапы обязательны: глифы лежат в атласе вдвое крупнее, чем
             // выводятся на экран, и без усреднения по 2×2 буквы остаются мыльными.
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::LINEAR_MIPMAP_LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_S, ::gl::CLAMP_TO_EDGE as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_T, ::gl::CLAMP_TO_EDGE as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::LINEAR_MIPMAP_LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_S,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_T,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::R8 as i32, 2048, 2048, 0,
-                ::gl::RED, ::gl::UNSIGNED_BYTE, std::ptr::null(),
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::R8 as i32,
+                2048,
+                2048,
+                0,
+                ::gl::RED,
+                ::gl::UNSIGNED_BYTE,
+                std::ptr::null(),
             );
             ::gl::GenerateMipmap(::gl::TEXTURE_2D);
         }
@@ -266,12 +363,27 @@ impl Renderer {
     fn init_white(&self) {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_white);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::NEAREST as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::NEAREST as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::NEAREST as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::NEAREST as i32,
+            );
             let white: [u8; 4] = [255, 255, 255, 255];
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, 1, 1, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, white.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                1,
+                1,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                white.as_ptr() as *const _,
             );
         }
     }
@@ -280,14 +392,37 @@ impl Renderer {
     fn init_thumbs(&self) {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_thumbs);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_S, ::gl::CLAMP_TO_EDGE as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_T, ::gl::CLAMP_TO_EDGE as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_S,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_T,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
             let blank = vec![0u8; THUMB_ATLAS * THUMB_ATLAS * 4];
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, THUMB_ATLAS as i32, THUMB_ATLAS as i32, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, blank.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                THUMB_ATLAS as i32,
+                THUMB_ATLAS as i32,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                blank.as_ptr() as *const _,
             );
         }
     }
@@ -297,14 +432,37 @@ impl Renderer {
     fn init_sel(&self) {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_sel);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_S, ::gl::CLAMP_TO_EDGE as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_T, ::gl::CLAMP_TO_EDGE as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_S,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_T,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
             let all: Vec<u8> = (0..=(1024 * 1024)).map(|_| 255u8).collect();
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::R8 as i32, 1024, 1024, 0,
-                ::gl::RED, ::gl::UNSIGNED_BYTE, all.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::R8 as i32,
+                1024,
+                1024,
+                0,
+                ::gl::RED,
+                ::gl::UNSIGNED_BYTE,
+                all.as_ptr() as *const _,
             );
         }
     }
@@ -315,8 +473,15 @@ impl Renderer {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_sel);
             ::gl::PixelStorei(::gl::UNPACK_ALIGNMENT, 1);
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::R8 as i32, w as i32, h as i32, 0,
-                ::gl::RED, ::gl::UNSIGNED_BYTE, data.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::R8 as i32,
+                w as i32,
+                h as i32,
+                0,
+                ::gl::RED,
+                ::gl::UNSIGNED_BYTE,
+                data.as_ptr() as *const _,
             );
         }
     }
@@ -325,14 +490,37 @@ impl Renderer {
     fn init_masks(&self) {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_masks);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::LINEAR as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_S, ::gl::CLAMP_TO_EDGE as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_WRAP_T, ::gl::CLAMP_TO_EDGE as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::LINEAR as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_S,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_WRAP_T,
+                ::gl::CLAMP_TO_EDGE as i32,
+            );
             let blank = vec![0u8; THUMB_ATLAS * THUMB_ATLAS * 4];
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, THUMB_ATLAS as i32, THUMB_ATLAS as i32, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, blank.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                THUMB_ATLAS as i32,
+                THUMB_ATLAS as i32,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                blank.as_ptr() as *const _,
             );
         }
     }
@@ -341,8 +529,15 @@ impl Renderer {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_thumbs);
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, THUMB_ATLAS as i32, THUMB_ATLAS as i32, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, rgba.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                THUMB_ATLAS as i32,
+                THUMB_ATLAS as i32,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                rgba.as_ptr() as *const _,
             );
         }
     }
@@ -352,8 +547,15 @@ impl Renderer {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_masks);
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, THUMB_ATLAS as i32, THUMB_ATLAS as i32, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, rgba.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                THUMB_ATLAS as i32,
+                THUMB_ATLAS as i32,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                rgba.as_ptr() as *const _,
             );
         }
     }
@@ -364,11 +566,26 @@ impl Renderer {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_float);
             // NEAREST сохраняет резкие пиксели фрагмента при масштабе холста,
             // LINEAR мыльно бы штрихи при увеличении.
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MIN_FILTER, ::gl::NEAREST as i32);
-            ::gl::TexParameteri(::gl::TEXTURE_2D, ::gl::TEXTURE_MAG_FILTER, ::gl::NEAREST as i32);
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MIN_FILTER,
+                ::gl::NEAREST as i32,
+            );
+            ::gl::TexParameteri(
+                ::gl::TEXTURE_2D,
+                ::gl::TEXTURE_MAG_FILTER,
+                ::gl::NEAREST as i32,
+            );
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, w as i32, h as i32, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, rgba.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                w as i32,
+                h as i32,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                rgba.as_ptr() as *const _,
             );
         }
     }
@@ -377,8 +594,15 @@ impl Renderer {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_canvas);
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::RGBA8 as i32, w as i32, h as i32, 0,
-                ::gl::RGBA, ::gl::UNSIGNED_BYTE, rgba.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::RGBA8 as i32,
+                w as i32,
+                h as i32,
+                0,
+                ::gl::RGBA,
+                ::gl::UNSIGNED_BYTE,
+                rgba.as_ptr() as *const _,
             );
         }
     }
@@ -387,8 +611,15 @@ impl Renderer {
         unsafe {
             ::gl::BindTexture(::gl::TEXTURE_2D, self.tex_atlas);
             ::gl::TexImage2D(
-                ::gl::TEXTURE_2D, 0, ::gl::R8 as i32, w as i32, h as i32, 0,
-                ::gl::RED, ::gl::UNSIGNED_BYTE, data.as_ptr() as *const _,
+                ::gl::TEXTURE_2D,
+                0,
+                ::gl::R8 as i32,
+                w as i32,
+                h as i32,
+                0,
+                ::gl::RED,
+                ::gl::UNSIGNED_BYTE,
+                data.as_ptr() as *const _,
             );
             // После каждой заливки атласа мипмапы пересчитываются, иначе
             // уменьшенный текст брался бы из старых уровней.
@@ -495,7 +726,14 @@ impl Renderer {
         let (u0, v0, u1, v1) = (it.u0, it.v0, it.u1, it.v1);
         let (r, g, b, a) = (it.color[0], it.color[1], it.color[2], it.color[3]);
         let v = &mut self.verts;
-        for (px, py, pu, pv) in [(x0, y0, u0, v0), (x1, y0, u1, v0), (x1, y1, u1, v1), (x0, y0, u0, v0), (x1, y1, u1, v1), (x0, y1, u0, v1)] {
+        for (px, py, pu, pv) in [
+            (x0, y0, u0, v0),
+            (x1, y0, u1, v0),
+            (x1, y1, u1, v1),
+            (x0, y0, u0, v0),
+            (x1, y1, u1, v1),
+            (x0, y1, u0, v1),
+        ] {
             v.push(px);
             v.push(py);
             v.push(pu);
@@ -550,4 +788,3 @@ fn compile(kind: ::gl::types::GLenum, src: &str) -> GLuint {
         sh
     }
 }
-

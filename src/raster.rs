@@ -1,4 +1,4 @@
-﻿//! Растеризация: мягкая кисть, линии, фигуры, заливка с допуском.
+//! Растеризация: мягкая кисть, линии, фигуры, заливка с допуском.
 //! Всё рисуется в пиксельный буфер слоя (RGBA8) методом source-over.
 
 use crate::doc::Layer;
@@ -62,7 +62,11 @@ impl RectData {
 /// Копирует прямоугольник слоя в отдельный буфер (буфер обмена).
 pub fn extract_rect(layer: &Layer, w: usize, h: usize, r: SelRect) -> RectData {
     let Some((x0, y0, x1, y1)) = r.clipped(w, h) else {
-        return RectData { w: 0, h: 0, pixels: Vec::new() };
+        return RectData {
+            w: 0,
+            h: 0,
+            pixels: Vec::new(),
+        };
     };
     let (rw, rh) = (x1 - x0, y1 - y0);
     let mut pixels = vec![0u8; rw * rh * 4];
@@ -71,13 +75,19 @@ pub fn extract_rect(layer: &Layer, w: usize, h: usize, r: SelRect) -> RectData {
         let dst = y * rw * 4;
         pixels[dst..dst + rw * 4].copy_from_slice(&layer.pixels[src..src + rw * 4]);
     }
-    RectData { w: rw, h: rh, pixels }
+    RectData {
+        w: rw,
+        h: rh,
+        pixels,
+    }
 }
 
 /// Делает область выделения полностью прозрачной (вырезание, удаление).
 /// Пишет напрямую, потому что обычный blend прозрачным цветом не стирает.
 pub fn clear_rect(layer: &mut Layer, w: usize, h: usize, r: SelRect) {
-    let Some((x0, y0, x1, y1)) = r.clipped(w, h) else { return };
+    let Some((x0, y0, x1, y1)) = r.clipped(w, h) else {
+        return;
+    };
     for y in y0..y1 {
         let i = (y * w + x0) * 4;
         layer.pixels[i..i + (x1 - x0) * 4].fill(0);
@@ -102,7 +112,12 @@ pub fn blit_rect(layer: &mut Layer, w: usize, h: usize, data: &RectData, x: f32,
                 continue;
             }
             let s = ((dy as usize) * data.w + dx as usize) * 4;
-            let c = [data.pixels[s], data.pixels[s + 1], data.pixels[s + 2], data.pixels[s + 3]];
+            let c = [
+                data.pixels[s],
+                data.pixels[s + 1],
+                data.pixels[s + 2],
+                data.pixels[s + 3],
+            ];
             layer.blend(w, tx as usize, ty as usize, c);
         }
     }
@@ -288,7 +303,12 @@ pub fn mask_bounds(mask: &[u8], w: usize, h: usize) -> Option<crate::raster::Sel
     if !any {
         return None;
     }
-    Some(crate::raster::SelRect::new(x0 as f32, y0 as f32, (x1 + 1) as f32, (y1 + 1) as f32))
+    Some(crate::raster::SelRect::new(
+        x0 as f32,
+        y0 as f32,
+        (x1 + 1) as f32,
+        (y1 + 1) as f32,
+    ))
 }
 
 /// Мягкий край маски выделения: размытие покрытия заданной силы.
@@ -324,7 +344,16 @@ pub fn mask_blur(mask: &mut [u8], w: usize, h: usize, px: f32) {
 
 /// Тень слоя: размытая альфа, сдвинутая и покрашенная. Возвращает готовый
 /// буфер RGBA, который накладывается под слой.
-pub fn layer_shadow(w: usize, h: usize, alpha: &[u8], dx: i32, dy: i32, blur: f32, color: [u8; 4], opacity: f32) -> Vec<u8> {
+pub fn layer_shadow(
+    w: usize,
+    h: usize,
+    alpha: &[u8],
+    dx: i32,
+    dy: i32,
+    blur: f32,
+    color: [u8; 4],
+    opacity: f32,
+) -> Vec<u8> {
     let mut buf = vec![0u8; w * h * 4];
     if blur <= 0.0 {
         // Без размытия тень — просто сдвиг альфы.
@@ -370,7 +399,14 @@ pub fn layer_shadow(w: usize, h: usize, alpha: &[u8], dx: i32, dy: i32, blur: f3
 
 /// Обводка слоя: альфа, расширенная на `size`, из которой вычтена исходная —
 /// остаётся только кольцо вокруг рисунка.
-pub fn layer_outline(w: usize, h: usize, alpha: &[u8], size: f32, color: [u8; 4], opacity: f32) -> Vec<u8> {
+pub fn layer_outline(
+    w: usize,
+    h: usize,
+    alpha: &[u8],
+    size: f32,
+    color: [u8; 4],
+    opacity: f32,
+) -> Vec<u8> {
     let mut grown = alpha.to_vec();
     mask_grow(&mut grown, w, h, size.max(1.0));
     let mut buf = vec![0u8; w * h * 4];
@@ -447,24 +483,49 @@ pub struct SymXform {
 
 impl SymXform {
     pub fn apply(&self, p: (f32, f32)) -> (f32, f32) {
-        (self.m[0] * p.0 + self.m[1] * p.1 + self.m[2], self.m[3] * p.0 + self.m[4] * p.1 + self.m[5])
+        (
+            self.m[0] * p.0 + self.m[1] * p.1 + self.m[2],
+            self.m[3] * p.0 + self.m[4] * p.1 + self.m[5],
+        )
     }
 }
 
 /// Преобразования симметрии для мазка. Первое — тождественное (сам мазок),
 /// дальше идут его отражения. `sides` — число лучей радиальной симметрии.
-pub fn symmetry_xforms(sym: crate::tools::Symmetry, sides: u32, w: usize, h: usize) -> Vec<SymXform> {
+pub fn symmetry_xforms(
+    sym: crate::tools::Symmetry,
+    sides: u32,
+    w: usize,
+    h: usize,
+) -> Vec<SymXform> {
     use crate::tools::Symmetry;
-    let id = SymXform { m: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0] };
+    let id = SymXform {
+        m: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+    };
     let (fw, fh) = (w as f32, h as f32);
     match sym {
         Symmetry::Off => vec![id],
         // Поворот на 180° вокруг центра холста.
-        Symmetry::Center => vec![id, SymXform { m: [-1.0, 0.0, fw, 0.0, -1.0, fh] }],
+        Symmetry::Center => vec![
+            id,
+            SymXform {
+                m: [-1.0, 0.0, fw, 0.0, -1.0, fh],
+            },
+        ],
         // Отражение относительно вертикали через центр.
-        Symmetry::Vertical => vec![id, SymXform { m: [-1.0, 0.0, fw, 0.0, 1.0, 0.0] }],
+        Symmetry::Vertical => vec![
+            id,
+            SymXform {
+                m: [-1.0, 0.0, fw, 0.0, 1.0, 0.0],
+            },
+        ],
         // Отражение относительно горизонтали через центр.
-        Symmetry::Horizontal => vec![id, SymXform { m: [1.0, 0.0, 0.0, 0.0, -1.0, fh] }],
+        Symmetry::Horizontal => vec![
+            id,
+            SymXform {
+                m: [1.0, 0.0, 0.0, 0.0, -1.0, fh],
+            },
+        ],
         Symmetry::Radial => {
             let n = sides.clamp(2, 12);
             let (cx, cy) = (fw * 0.5, fh * 0.5);
@@ -474,21 +535,21 @@ pub fn symmetry_xforms(sym: crate::tools::Symmetry, sides: u32, w: usize, h: usi
                 let (s, c) = a.sin_cos();
                 // Поворот вокруг центра: сначала сдвиг в начало, поворот, сдвиг назад.
                 let rot = SymXform {
-                    m: [
-                        c,
-                        -s,
-                        cx - c * cx + s * cy,
-                        s,
-                        c,
-                        cy - s * cx - c * cy,
-                    ],
+                    m: [c, -s, cx - c * cx + s * cy, s, c, cy - s * cx - c * cy],
                 };
                 out.push(rot);
                 // Отражение намазка по вертикали: x' = w - (поворот x).
                 // Знаки первых двух коэффициентов меняются, свободный член —
                 // наоборот, прибавляет ширину холста.
                 out.push(SymXform {
-                    m: [-rot.m[0], -rot.m[1], fw - rot.m[2], rot.m[3], rot.m[4], rot.m[5]],
+                    m: [
+                        -rot.m[0],
+                        -rot.m[1],
+                        fw - rot.m[2],
+                        rot.m[3],
+                        rot.m[4],
+                        rot.m[5],
+                    ],
                 });
             }
             out
@@ -618,7 +679,9 @@ pub fn stamp_curve<F: FnMut(f32, f32)>(
     let samples: Vec<(f32, f32)> = (0..=n).map(|i| eval(i as f32 / n as f32)).collect();
     let mut acc = vec![0.0f32; samples.len()];
     for i in 1..samples.len() {
-        let d = ((samples[i].0 - samples[i - 1].0).powi(2) + (samples[i].1 - samples[i - 1].1).powi(2)).sqrt();
+        let d = ((samples[i].0 - samples[i - 1].0).powi(2)
+            + (samples[i].1 - samples[i - 1].1).powi(2))
+        .sqrt();
         acc[i] = acc[i - 1] + d;
     }
     let total = acc[samples.len() - 1];
@@ -640,7 +703,11 @@ pub fn stamp_curve<F: FnMut(f32, f32)>(
             seg += 1;
         }
         let d = acc[seg + 1] - acc[seg];
-        let t = if d > 1e-6 { (target - acc[seg]) / d } else { 0.0 };
+        let t = if d > 1e-6 {
+            (target - acc[seg]) / d
+        } else {
+            0.0
+        };
         let a = samples[seg];
         let b = samples[seg + 1];
         put(a.0 + (b.0 - a.0) * t, a.1 + (b.1 - a.1) * t);
@@ -734,7 +801,15 @@ fn shape_cover(d: f32, r: f32, hardness: f32) -> f32 {
 
 /// Цвет из снимка слоя под точкой со сдвигом оттенка и насыщенности —
 /// «липкая палочка» берёт цвет из того, что уже нарисовано.
-pub fn sample_shifted(base: &[u8], w: usize, h: usize, x: f32, y: f32, hue: f32, sat: f32) -> [u8; 4] {
+pub fn sample_shifted(
+    base: &[u8],
+    w: usize,
+    h: usize,
+    x: f32,
+    y: f32,
+    hue: f32,
+    sat: f32,
+) -> [u8; 4] {
     let px = (x.floor().max(0.0) as usize).min(w.saturating_sub(1));
     let py = (y.floor().max(0.0) as usize).min(h.saturating_sub(1));
     let i = (py * w + px) * 4;
@@ -833,8 +908,22 @@ pub fn stamp_heal(
             let src = [patch[i], patch[i + 1], patch[i + 2], patch[i + 3]];
             let dst = layer.get(w, x as usize, y as usize);
             let a = (cover * s).clamp(0.0, 1.0);
-            let mix = |d: u8, v: u8| (d as f32 + (v as f32 - d as f32) * a).round().clamp(0.0, 255.0) as u8;
-            layer.set(w, x as usize, y as usize, [mix(dst[0], src[0]), mix(dst[1], src[1]), mix(dst[2], src[2]), mix(dst[3], src[3])]);
+            let mix = |d: u8, v: u8| {
+                (d as f32 + (v as f32 - d as f32) * a)
+                    .round()
+                    .clamp(0.0, 255.0) as u8
+            };
+            layer.set(
+                w,
+                x as usize,
+                y as usize,
+                [
+                    mix(dst[0], src[0]),
+                    mix(dst[1], src[1]),
+                    mix(dst[2], src[2]),
+                    mix(dst[3], src[3]),
+                ],
+            );
         }
     }
 }
@@ -855,7 +944,18 @@ pub fn stamp(
     color: [u8; 4],
     opacity: f32,
 ) {
-    stamp_shape(layer, w, h, cx, cy, radius, hardness, color, opacity, Shape::Round);
+    stamp_shape(
+        layer,
+        w,
+        h,
+        cx,
+        cy,
+        radius,
+        hardness,
+        color,
+        opacity,
+        Shape::Round,
+    );
 }
 
 /// Линия кистью: отпечатки с шагом ~0.25 радиуса — без разрывов и «ступенек».
@@ -881,7 +981,17 @@ pub fn brush_line(
     let n = n.min(4000.0);
     for i in 0..=n as i32 {
         let t = i as f32 / n;
-        stamp(layer, w, h, x0 + dx * t, y0 + dy * t, radius, hardness, color, opacity);
+        stamp(
+            layer,
+            w,
+            h,
+            x0 + dx * t,
+            y0 + dy * t,
+            radius,
+            hardness,
+            color,
+            opacity,
+        );
     }
 }
 
@@ -908,7 +1018,18 @@ pub fn brush_line_shape(
     let n = (dist / step).ceil().max(1.0).min(4000.0);
     for i in 0..=n as i32 {
         let t = i as f32 / n;
-        stamp_shape(layer, w, h, x0 + dx * t, y0 + dy * t, radius, hardness, color, opacity, shape);
+        stamp_shape(
+            layer,
+            w,
+            h,
+            x0 + dx * t,
+            y0 + dy * t,
+            radius,
+            hardness,
+            color,
+            opacity,
+            shape,
+        );
     }
 }
 
@@ -993,7 +1114,12 @@ pub fn rect(
         let y1i = (by.ceil().min((h - 1) as f32)) as usize;
         let x0i = (ax.floor().max(0.0)) as usize;
         let x1i = (bx.ceil().min((w - 1) as f32)) as usize;
-        let c = [color[0], color[1], color[2], (color[3] as f32 * opacity).round() as u8];
+        let c = [
+            color[0],
+            color[1],
+            color[2],
+            (color[3] as f32 * opacity).round() as u8,
+        ];
         for y in y0i..=y1i.min(h - 1) {
             for x in x0i..=x1i.min(w - 1) {
                 layer.blend(w, x, y, c);
@@ -1031,7 +1157,12 @@ pub fn ellipse(
     if filled {
         let y0i = (cy - b).floor().max(0.0) as usize;
         let y1i = (cy + b).ceil().min((h - 1) as f32) as usize;
-        let c = [color[0], color[1], color[2], (color[3] as f32 * opacity).round() as u8];
+        let c = [
+            color[0],
+            color[1],
+            color[2],
+            (color[3] as f32 * opacity).round() as u8,
+        ];
         for y in y0i..=y1i.min(h - 1) {
             let dy = (y as f32 + 0.5 - cy) / b;
             let t = 1.0 - dy * dy;
@@ -1048,7 +1179,8 @@ pub fn ellipse(
         return;
     }
     // Контур: обходим по углу, густота шага зависит от радиуса кисти.
-    let perimeter = std::f32::consts::PI * (3.0 * (a + b) - ((a * b * 3.0).sqrt() + (2.0 * a * b).sqrt()));
+    let perimeter =
+        std::f32::consts::PI * (3.0 * (a + b) - ((a * b * 3.0).sqrt() + (2.0 * a * b).sqrt()));
     let steps = ((perimeter / ((radius * 0.25).max(0.35))).ceil().max(32.0)).min(8000.0);
     let mut px = cx + a;
     let mut py = cy;
@@ -1060,7 +1192,19 @@ pub fn ellipse(
         if i > 0 {
             let d = ((x - px) * (x - px) + (y - py) * (y - py)).sqrt();
             if d >= (radius * 0.25).max(0.35) {
-                brush_line(layer, w, h, px, py, x, y, radius.max(0.5), hardness, color, opacity);
+                brush_line(
+                    layer,
+                    w,
+                    h,
+                    px,
+                    py,
+                    x,
+                    y,
+                    radius.max(0.5),
+                    hardness,
+                    color,
+                    opacity,
+                );
                 px = x;
                 py = y;
             }
@@ -1153,7 +1297,8 @@ pub fn sharpen(layer: &mut Layer, w: usize, h: usize, amount: f32) {
     for i in 0..layer.pixels.len() / 4 {
         let o = i * 4;
         for c in 0..3 {
-            let v = original[o + c] as f32 + (original[o + c] as f32 - soft.pixels[o + c] as f32) * a * 2.0;
+            let v = original[o + c] as f32
+                + (original[o + c] as f32 - soft.pixels[o + c] as f32) * a * 2.0;
             layer.pixels[o + c] = v.clamp(0.0, 255.0) as u8;
         }
     }
@@ -1197,7 +1342,9 @@ pub struct Curve {
 
 impl Default for Curve {
     fn default() -> Self {
-        Self { pts: vec![(0.0, 0.0), (1.0, 1.0)] }
+        Self {
+            pts: vec![(0.0, 0.0), (1.0, 1.0)],
+        }
     }
 }
 
@@ -1240,7 +1387,11 @@ impl Curve {
         m[0] = d[0];
         m[n - 1] = d[n - 2];
         for i in 1..n - 1 {
-            m[i] = if d[i - 1] * d[i] <= 0.0 { 0.0 } else { (d[i - 1] + d[i]) * 0.5 };
+            m[i] = if d[i - 1] * d[i] <= 0.0 {
+                0.0
+            } else {
+                (d[i - 1] + d[i]) * 0.5
+            };
         }
         for i in 0..n - 1 {
             if d[i].abs() < 1e-6 {
@@ -1367,7 +1518,8 @@ pub fn histogram(layer: &Layer) -> [u32; 256] {
         if px[i * 4 + 3] == 0 {
             continue;
         }
-        let l = ((px[i * 4] as u32 * 77 + px[i * 4 + 1] as u32 * 151 + px[i * 4 + 2] as u32 * 28) >> 8) as usize;
+        let l = ((px[i * 4] as u32 * 77 + px[i * 4 + 1] as u32 * 151 + px[i * 4 + 2] as u32 * 28)
+            >> 8) as usize;
         h[l.min(255)] += 1;
     }
     h
@@ -1423,7 +1575,9 @@ impl HsvChannel {
 
     /// Насколько пиксель попадает в сектор: 0 — совсем мимо, 1 — в центре.
     fn weight(self, hue: f32, sat: f32) -> f32 {
-        let Some((a, b)) = self.range() else { return 1.0; };
+        let Some((a, b)) = self.range() else {
+            return 1.0;
+        };
         if sat < 0.02 {
             return 0.0; // серый не принадлежит ни одному сектору
         }
@@ -1437,7 +1591,11 @@ impl HsvChannel {
             return 0.0;
         }
         // У краёв сектора влияние слабее — так переходы плавные.
-        let mid = if a < b { (a + b) * 0.5 } else { (a + b) * 0.5 + 180.0 };
+        let mid = if a < b {
+            (a + b) * 0.5
+        } else {
+            (a + b) * 0.5 + 180.0
+        };
         let d = ((h - mid).abs() / ((b - a) * 0.5)).min(1.0);
         (1.0 - d).clamp(0.0, 1.0)
     }
@@ -1452,7 +1610,11 @@ pub fn hsv_adjust(layer: &mut Layer, ch: HsvChannel, hue: f32, sat: f32, light: 
     let px = &mut layer.pixels;
     for i in 0..px.len() / 4 {
         let o = i * 4;
-        let (r, g, b) = (px[o] as f32 / 255.0, px[o + 1] as f32 / 255.0, px[o + 2] as f32 / 255.0);
+        let (r, g, b) = (
+            px[o] as f32 / 255.0,
+            px[o + 1] as f32 / 255.0,
+            px[o + 2] as f32 / 255.0,
+        );
         let mx = r.max(g).max(b);
         let mn = r.min(g).min(b);
         let d = mx - mn;
@@ -1514,7 +1676,8 @@ pub fn color_balance(
     let px = &mut layer.pixels;
     for i in 0..px.len() / 4 {
         let o = i * 4;
-        let l = (px[o] as f32 * 0.299 + px[o + 1] as f32 * 0.587 + px[o + 2] as f32 * 0.114) / 255.0;
+        let l =
+            (px[o] as f32 * 0.299 + px[o + 1] as f32 * 0.587 + px[o + 2] as f32 * 0.114) / 255.0;
         // Три полосы с плавными стыками на 1/3 и 2/3 светлоты.
         let ws = (1.0 - (l * 3.0).min(1.0)).powi(2);
         let wh = ((l * 3.0 - 2.0).max(0.0)).powi(2);
@@ -1531,7 +1694,13 @@ pub fn color_balance(
 /// всё в значениях 0..=255 (гамма — 0.1…4.0). Порядок выходной таблицы
 /// именно такой, как в Photoshop: сначала входная точка, потом гамма,
 /// потом выходная.
-pub fn levels_lut(in_black: f32, in_white: f32, gamma: f32, out_black: f32, out_white: f32) -> [u8; 256] {
+pub fn levels_lut(
+    in_black: f32,
+    in_white: f32,
+    gamma: f32,
+    out_black: f32,
+    out_white: f32,
+) -> [u8; 256] {
     let mut lut = [0u8; 256];
     let (ib, iw) = (in_black.clamp(0.0, 255.0), in_white.clamp(1.0, 255.0));
     let g = gamma.clamp(0.1, 4.0);
@@ -1549,7 +1718,11 @@ pub fn levels_lut(in_black: f32, in_white: f32, gamma: f32, out_black: f32, out_
 /// Яркость, контраст, насыщенность и оттенок одним проходом.
 /// Все значения в диапазоне -1..=1 (оттенок — -1..=1, то есть ±180°).
 pub fn adjust(layer: &mut Layer, brightness: f32, contrast: f32, saturation: f32, hue: f32) {
-    if brightness.abs() < 0.001 && contrast.abs() < 0.001 && saturation.abs() < 0.001 && hue.abs() < 0.001 {
+    if brightness.abs() < 0.001
+        && contrast.abs() < 0.001
+        && saturation.abs() < 0.001
+        && hue.abs() < 0.001
+    {
         return;
     }
     // Контраст: коэффициент, дающий 0.5 серого без изменения среднего.
@@ -1664,7 +1837,9 @@ pub fn mask_stamp_shape(
                 continue;
             }
             let i = y * w + x;
-            mask[i] = (mask[i] as f32 * (1.0 - cov) + value as f32 * cov).round().clamp(0.0, 255.0) as u8;
+            mask[i] = (mask[i] as f32 * (1.0 - cov) + value as f32 * cov)
+                .round()
+                .clamp(0.0, 255.0) as u8;
         }
     }
 }
@@ -1691,7 +1866,16 @@ pub fn mask_line_shape(
     for i in 0..=n {
         let t = i as f32 / n as f32;
         mask_stamp_shape(
-            mask, w, h, x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, radius, hardness, value, opacity, shape,
+            mask,
+            w,
+            h,
+            x0 + (x1 - x0) * t,
+            y0 + (y1 - y0) * t,
+            radius,
+            hardness,
+            value,
+            opacity,
+            shape,
         );
     }
 }
@@ -1720,10 +1904,24 @@ pub fn blit_transformed(
     }
     let (fw, fh) = (data.width() as f32, data.height() as f32);
     // Границы результата — по углам.
-    let minx = pts.iter().map(|p| p.0).fold(f32::MAX, f32::min).floor().max(0.0) as usize;
-    let miny = pts.iter().map(|p| p.1).fold(f32::MAX, f32::min).floor().max(0.0) as usize;
-    let maxx = (pts.iter().map(|p| p.0).fold(f32::MIN, f32::max).ceil() as i64).min(w as i64).max(0) as usize;
-    let maxy = (pts.iter().map(|p| p.1).fold(f32::MIN, f32::max).ceil() as i64).min(h as i64).max(0) as usize;
+    let minx = pts
+        .iter()
+        .map(|p| p.0)
+        .fold(f32::MAX, f32::min)
+        .floor()
+        .max(0.0) as usize;
+    let miny = pts
+        .iter()
+        .map(|p| p.1)
+        .fold(f32::MAX, f32::min)
+        .floor()
+        .max(0.0) as usize;
+    let maxx = (pts.iter().map(|p| p.0).fold(f32::MIN, f32::max).ceil() as i64)
+        .min(w as i64)
+        .max(0) as usize;
+    let maxy = (pts.iter().map(|p| p.1).fold(f32::MIN, f32::max).ceil() as i64)
+        .min(h as i64)
+        .max(0) as usize;
     for ty in miny..maxy {
         for tx in minx..maxx {
             let px = tx as f32 + 0.5 - p0.0;
@@ -1737,7 +1935,10 @@ pub fn blit_transformed(
             let sx = a * fw - 0.5;
             let sy = b * fh - 0.5;
             let (x0, y0) = (sx.floor().max(0.0) as usize, sy.floor().max(0.0) as usize);
-            let (x1, y1) = ((sx + 1.0).ceil().min(fw) as usize, (sy + 1.0).ceil().min(fh) as usize);
+            let (x1, y1) = (
+                (sx + 1.0).ceil().min(fw) as usize,
+                (sy + 1.0).ceil().min(fh) as usize,
+            );
             if x0 >= x1 || y0 >= y1 {
                 continue;
             }
@@ -1795,7 +1996,12 @@ pub fn flood_fill(
     if target == color && color[3] as f32 * opacity >= 254.0 {
         return;
     }
-    let nc = [color[0], color[1], color[2], (color[3] as f32 * opacity).round() as u8];
+    let nc = [
+        color[0],
+        color[1],
+        color[2],
+        (color[3] as f32 * opacity).round() as u8,
+    ];
     if nc[3] == 0 {
         return;
     }
@@ -1813,7 +2019,12 @@ pub fn flood_fill(
 
     if !contiguous {
         for i in 0..(w * h) {
-            let p = [layer.pixels[i * 4], layer.pixels[i * 4 + 1], layer.pixels[i * 4 + 2], layer.pixels[i * 4 + 3]];
+            let p = [
+                layer.pixels[i * 4],
+                layer.pixels[i * 4 + 1],
+                layer.pixels[i * 4 + 2],
+                layer.pixels[i * 4 + 3],
+            ];
             let d = (p[0] as i32 - target[0] as i32).abs()
                 + (p[1] as i32 - target[1] as i32).abs()
                 + (p[2] as i32 - target[2] as i32).abs()
@@ -1835,7 +2046,12 @@ pub fn flood_fill(
         if seen[i] {
             continue;
         }
-        let p = [layer.pixels[i * 4], layer.pixels[i * 4 + 1], layer.pixels[i * 4 + 2], layer.pixels[i * 4 + 3]];
+        let p = [
+            layer.pixels[i * 4],
+            layer.pixels[i * 4 + 1],
+            layer.pixels[i * 4 + 2],
+            layer.pixels[i * 4 + 3],
+        ];
         if p != target && !close(p, target) {
             continue;
         }
@@ -1895,22 +2111,68 @@ mod tests {
         for y in 0..ph {
             for x in 0..pw {
                 let i = (y * pw + x) * 4;
-                let c = if x < 2 { [255, 0, 0, 255] } else { [0, 0, 255, 255] };
+                let c = if x < 2 {
+                    [255, 0, 0, 255]
+                } else {
+                    [0, 0, 255, 255]
+                };
                 patch[i..i + 4].copy_from_slice(&c);
             }
         }
         let mut l = empty(20, 20);
         l.fill([0, 255, 0, 255]);
         // Отпечаток в центре холста: центр патча (2,2) — его правая половина.
-        stamp_heal(&mut l, 20, 20, &patch, pw, ph, 10.0, 10.0, 4.0, 1.0, 1.0, Shape::Round);
-        assert_eq!(l.get(20, 10, 10), [0, 0, 255, 255], "центр патча попал в центр");
-        assert_eq!(l.get(20, 9, 10), [255, 0, 0, 255], "левее — левая половина патча");
-        assert_eq!(l.get(20, 11, 10), [0, 0, 255, 255], "правее — правая половина");
+        stamp_heal(
+            &mut l,
+            20,
+            20,
+            &patch,
+            pw,
+            ph,
+            10.0,
+            10.0,
+            4.0,
+            1.0,
+            1.0,
+            Shape::Round,
+        );
+        assert_eq!(
+            l.get(20, 10, 10),
+            [0, 0, 255, 255],
+            "центр патча попал в центр"
+        );
+        assert_eq!(
+            l.get(20, 9, 10),
+            [255, 0, 0, 255],
+            "левее — левая половина патча"
+        );
+        assert_eq!(
+            l.get(20, 11, 10),
+            [0, 0, 255, 255],
+            "правее — правая половина"
+        );
         // Сила 0.5 смешивает наполовину: синий становится бирюзовым.
         let mut l2 = empty(20, 20);
         l2.fill([0, 255, 0, 255]);
-        stamp_heal(&mut l2, 20, 20, &patch, pw, ph, 10.0, 10.0, 4.0, 1.0, 0.5, Shape::Round);
-        assert_eq!(l2.get(20, 10, 10), [0, 128, 128, 255], "синий наполовину с зелёным");
+        stamp_heal(
+            &mut l2,
+            20,
+            20,
+            &patch,
+            pw,
+            ph,
+            10.0,
+            10.0,
+            4.0,
+            1.0,
+            0.5,
+            Shape::Round,
+        );
+        assert_eq!(
+            l2.get(20, 10, 10),
+            [0, 128, 128, 255],
+            "синий наполовину с зелёным"
+        );
     }
 
     #[test]
@@ -1938,7 +2200,10 @@ mod tests {
         all.set(2, 1, 0, [0, 255, 0, 255]);
         hsv_adjust(&mut all, HsvChannel::All, 120.0, 0.0, 0.0);
         assert!(all.get(2, 0, 0)[1] > 200, "красный стал зелёным");
-        assert!(all.get(2, 1, 0)[2] > 200 && all.get(2, 1, 0)[1] < 60, "зелёный стал синим");
+        assert!(
+            all.get(2, 1, 0)[2] > 200 && all.get(2, 1, 0)[1] < 60,
+            "зелёный стал синим"
+        );
         // Светлота в минус затемняет.
         let mut dark = empty(2, 1);
         dark.set(2, 0, 0, [200, 200, 200, 255]);
@@ -1957,9 +2222,17 @@ mod tests {
         l.set(4, 3, 0, [128, 128, 128, 255]);
         color_balance(&mut l, [60.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, -60.0]);
         let shadow = l.get(4, 0, 0);
-        assert!(shadow[0] > 20 && shadow[1] == 20, "тень покраснела: {:?}", shadow);
+        assert!(
+            shadow[0] > 20 && shadow[1] == 20,
+            "тень покраснела: {:?}",
+            shadow
+        );
         let light = l.get(4, 2, 0);
-        assert!(light[2] < 240 && light[0] == 240, "свет посинел: {:?}", light);
+        assert!(
+            light[2] < 240 && light[0] == 240,
+            "свет посинел: {:?}",
+            light
+        );
         // Полутон не должен меняться, если его полосы не затронуты.
         assert_eq!(l.get(4, 1, 0), [128, 128, 128, 255], "полутон не тронут");
         // Нулевые значения ничего не делают.
@@ -2036,7 +2309,9 @@ mod tests {
     #[test]
     fn curve_applies_to_the_chosen_channel_only() {
         // Кривая с резким подъёмом: яркие значения уходят в белый.
-        let c = Curve { pts: vec![(0.0, 0.0), (0.5, 0.0), (1.0, 1.0)] };
+        let c = Curve {
+            pts: vec![(0.0, 0.0), (0.5, 0.0), (1.0, 1.0)],
+        };
         let lut = c.lut();
         let mut l = empty(4, 1);
         for x in 0..4 {
@@ -2057,7 +2332,11 @@ mod tests {
         l2.set(4, 0, 0, [10, 220, 200, 255]);
         apply_curve(&mut l2, CurveChannel::Rgb, &lut);
         let c2 = l2.get(4, 0, 0);
-        assert_ne!((c2[0], c2[1], c2[2]), (10, 220, 200), "общий канал меняет все три");
+        assert_ne!(
+            (c2[0], c2[1], c2[2]),
+            (10, 220, 200),
+            "общий канал меняет все три"
+        );
     }
 
     #[test]
@@ -2074,7 +2353,11 @@ mod tests {
 
     /// Пустой буфер прямоугольника для тестов трансформации.
     fn rect_data(w: usize, h: usize) -> RectData {
-        RectData { w, h, pixels: vec![0u8; w * h * 4] }
+        RectData {
+            w,
+            h,
+            pixels: vec![0u8; w * h * 4],
+        }
     }
 
     fn empty(w: usize, h: usize) -> Layer {
@@ -2086,11 +2369,28 @@ mod tests {
         let (w, h) = (16, 16);
         let mut l = empty(w, h);
         // красим красный квадрат 8×8 в позиции (4,4)
-        rect(&mut l, w, h, 4.0, 4.0, 12.0, 12.0, true, 0.5, 1.0, [255, 0, 0, 255], 1.0);
+        rect(
+            &mut l,
+            w,
+            h,
+            4.0,
+            4.0,
+            12.0,
+            12.0,
+            true,
+            0.5,
+            1.0,
+            [255, 0, 0, 255],
+            1.0,
+        );
         let sel = SelRect::new(4.0, 4.0, 12.0, 12.0);
         let data = extract_rect(&l, w, h, sel);
         assert_eq!((data.width(), data.height()), (8, 8));
-        assert_eq!(&data.pixels[0..4], &[255, 0, 0, 255], "буфер содержит вырезанное");
+        assert_eq!(
+            &data.pixels[0..4],
+            &[255, 0, 0, 255],
+            "буфер содержит вырезанное"
+        );
 
         clear_rect(&mut l, w, h, sel);
         assert_eq!(l.get(w, 8, 8)[3], 0, "выделение очищено");
@@ -2105,7 +2405,20 @@ mod tests {
     fn selection_ops_clip_to_canvas() {
         let (w, h) = (8, 8);
         let mut l = empty(w, h);
-        rect(&mut l, w, h, -5.0, -5.0, 20.0, 20.0, true, 0.5, 1.0, [0, 255, 0, 255], 1.0);
+        rect(
+            &mut l,
+            w,
+            h,
+            -5.0,
+            -5.0,
+            20.0,
+            20.0,
+            true,
+            0.5,
+            1.0,
+            [0, 255, 0, 255],
+            1.0,
+        );
         // выделение целиком вне холста — буфер пустой, очистка безопасна
         let outside = SelRect::new(100.0, 100.0, 110.0, 110.0);
         let data = extract_rect(&l, w, h, outside);
@@ -2147,7 +2460,11 @@ mod tests {
         let mut l2 = empty(w, h);
         l2.fill([128, 128, 128, 255]);
         adjust(&mut l2, 0.0, -1.0, 0.0, 0.0);
-        assert!(l2.get(w, 0, 0)[0] < 140, "контраст ниже: {:?}", l2.get(w, 0, 0));
+        assert!(
+            l2.get(w, 0, 0)[0] < 140,
+            "контраст ниже: {:?}",
+            l2.get(w, 0, 0)
+        );
 
         // насыщенность: серый не меняется, чистый красный при -1 становится серым
         let mut l3 = empty(w, h);
@@ -2178,7 +2495,9 @@ mod tests {
         let after = l.get(w, 7, 4);
         assert!(
             after[0] > flat_before[0].max(0) || after[0] == 0,
-            "рядом с точкой стало контрастнее: {:?} -> {:?}", flat_before, after
+            "рядом с точкой стало контрастнее: {:?} -> {:?}",
+            flat_before,
+            after
         );
     }
 
@@ -2188,7 +2507,10 @@ mod tests {
         let mut l = empty(w, h);
         l.pixels.iter_mut().for_each(|v| *v = 0);
         adjust(&mut l, 1.0, 1.0, 1.0, 1.0);
-        assert!(l.pixels.iter().all(|v| *v == 0), "прозрачное не должно просыпаться");
+        assert!(
+            l.pixels.iter().all(|v| *v == 0),
+            "прозрачное не должно просыпаться"
+        );
     }
 
     #[test]
@@ -2196,7 +2518,10 @@ mod tests {
         let mut pts: Vec<(f32, f32)> = Vec::new();
         stamp_curve(
             |x, y| pts.push((x, y)),
-            (0.0, 0.0), (0.0, 0.0), (30.0, 0.0), (30.0, 0.0),
+            (0.0, 0.0),
+            (0.0, 0.0),
+            (30.0, 0.0),
+            (30.0, 0.0),
             2.0,
         );
         assert!(pts.len() > 10, "слишком мало точек: {}", pts.len());
@@ -2205,8 +2530,14 @@ mod tests {
             let d = ((w[1].0 - w[0].0).powi(2) + (w[1].1 - w[0].1).powi(2)).sqrt();
             assert!(d <= 2.01, "разрыв в мазке: {}", d);
         }
-        assert!((pts.first().unwrap().1 - 0.0).abs() < 0.001, "начинается в p1");
-        assert!((pts.last().unwrap().0 - 30.0).abs() < 0.001, "заканчивается в p2");
+        assert!(
+            (pts.first().unwrap().1 - 0.0).abs() < 0.001,
+            "начинается в p1"
+        );
+        assert!(
+            (pts.last().unwrap().0 - 30.0).abs() < 0.001,
+            "заканчивается в p2"
+        );
     }
 
     #[test]
@@ -2214,12 +2545,23 @@ mod tests {
         let mut hits: Vec<(f32, f32)> = Vec::new();
         stamp_curve(
             |x, y| hits.push((x, y)),
-            (0.0, 0.0), (10.0, 10.0), (10.0, 30.0), (40.0, 30.0),
+            (0.0, 0.0),
+            (10.0, 10.0),
+            (10.0, 30.0),
+            (40.0, 30.0),
             0.5,
         );
         let near = |p: (f32, f32)| hits.iter().any(|h| (h.0 - p.0).hypot(h.1 - p.1) < 0.6);
-        assert!(near((10.0, 10.0)), "дуга не проходит через начало: {:?}", hits);
-        assert!(near((10.0, 30.0)), "дуга не проходит через конец: {:?}", hits);
+        assert!(
+            near((10.0, 10.0)),
+            "дуга не проходит через начало: {:?}",
+            hits
+        );
+        assert!(
+            near((10.0, 30.0)),
+            "дуга не проходит через конец: {:?}",
+            hits
+        );
     }
 
     #[test]
@@ -2228,18 +2570,55 @@ mod tests {
         let color = [0, 0, 0, 255];
         // Круг: углы пусты, центр закрашен.
         let mut round = empty(w, h);
-        stamp_shape(&mut round, w, h, 20.0, 20.0, 10.0, 1.0, color, 1.0, Shape::Round);
+        stamp_shape(
+            &mut round,
+            w,
+            h,
+            20.0,
+            20.0,
+            10.0,
+            1.0,
+            color,
+            1.0,
+            Shape::Round,
+        );
         assert!(round.get(w, 20, 20)[3] > 200, "центр круга закрашен");
         assert_eq!(round.get(w, 12, 12)[3], 0, "угол круга пуст");
 
         // Квадрат: угол квадрата закрашен.
         let mut sq = empty(w, h);
-        stamp_shape(&mut sq, w, h, 20.0, 20.0, 10.0, 1.0, color, 1.0, Shape::Square);
-        assert!(sq.get(w, 12, 12)[3] > 200, "угол квадрата закрашен: {:?}", sq.get(w, 12, 12));
+        stamp_shape(
+            &mut sq,
+            w,
+            h,
+            20.0,
+            20.0,
+            10.0,
+            1.0,
+            color,
+            1.0,
+            Shape::Square,
+        );
+        assert!(
+            sq.get(w, 12, 12)[3] > 200,
+            "угол квадрата закрашен: {:?}",
+            sq.get(w, 12, 12)
+        );
 
         // Эллипс: шире, чем круг, по горизонтали.
         let mut el = empty(w, h);
-        stamp_shape(&mut el, w, h, 20.0, 20.0, 10.0, 1.0, color, 1.0, Shape::Ellipse);
+        stamp_shape(
+            &mut el,
+            w,
+            h,
+            20.0,
+            20.0,
+            10.0,
+            1.0,
+            color,
+            1.0,
+            Shape::Ellipse,
+        );
         assert!(el.get(w, 20, 20)[3] > 200, "центр эллипса закрашен");
         assert!(
             el.get(w, 9, 20)[3] > 0 && round.get(w, 9, 20)[3] == 0,
@@ -2259,9 +2638,17 @@ mod tests {
         blit_transformed(&mut l, w, h, &data, pts);
         let px = l.get(w, 11, 11);
         // Четверть площади красная: цвет без тёмного канта, альфа ~64.
-        assert!(px[0] > 240 && px[1] == 0 && px[3] > 40, "левый верхний угол красный: {:?}", px);
+        assert!(
+            px[0] > 240 && px[1] == 0 && px[3] > 40,
+            "левый верхний угол красный: {:?}",
+            px
+        );
         let far = l.get(w, 13, 13);
-        assert!(far[0] < 60, "правый нижний угол — прозрачная часть: {:?}", far);
+        assert!(
+            far[0] < 60,
+            "правый нижний угол — прозрачная часть: {:?}",
+            far
+        );
         assert_eq!(l.get(w, 5, 5)[3], 0, "вне результата пусто");
     }
 
@@ -2273,15 +2660,14 @@ mod tests {
         data.pixels[0..4].copy_from_slice(&[255, 0, 0, 255]);
         // Поворот на 90° по часовой вокруг центра (16, 16): красный угол
         // исходника (левый верхний) должен оказаться вверху результата.
-        let pts = [
-            (17.0, 15.0),
-            (17.0, 17.0),
-            (15.0, 17.0),
-            (15.0, 15.0),
-        ];
+        let pts = [(17.0, 15.0), (17.0, 17.0), (15.0, 17.0), (15.0, 15.0)];
         blit_transformed(&mut l, w, h, &data, pts);
         let top = l.get(w, 16, 15);
-        assert!(top[0] > 150 && top[3] > 20, "красный оказался сверху: {:?}", top);
+        assert!(
+            top[0] > 150 && top[3] > 20,
+            "красный оказался сверху: {:?}",
+            top
+        );
         let bottom = l.get(w, 16, 16);
         assert!(bottom[3] < 60, "внизу должно быть пусто: {:?}", bottom);
     }
@@ -2293,7 +2679,10 @@ mod tests {
         assert_eq!((s.x, s.y, s.w, s.h), (10.0, 20.0, 20.0, 20.0));
         assert!(s.contains((15.0, 25.0)));
         assert!(!s.contains((5.0, 25.0)), "слева от рамки — мимо");
-        assert!(!s.contains((15.0, 45.0)), "снизу — мимо (нижняя граница исключена)");
+        assert!(
+            !s.contains((15.0, 45.0)),
+            "снизу — мимо (нижняя граница исключена)"
+        );
     }
 
     #[test]
@@ -2312,7 +2701,10 @@ mod tests {
         let mut l = empty(w, h);
         // hardness 0.0: в центре покрытие почти полное, к краю падает до нуля
         stamp(&mut l, w, h, 20.0, 20.0, 8.0, 0.0, [0, 0, 0, 255], 1.0);
-        assert!(l.get(w, 20, 20)[3] > 200, "центр мягкой кисти почти непрозрачен");
+        assert!(
+            l.get(w, 20, 20)[3] > 200,
+            "центр мягкой кисти почти непрозрачен"
+        );
         assert!(l.get(w, 27, 20)[3] < 120, "край мягкой кисти прозрачен");
     }
 
@@ -2320,7 +2712,19 @@ mod tests {
     fn brush_line_is_continuous() {
         let (w, h) = (60, 20);
         let mut l = empty(w, h);
-        brush_line(&mut l, w, h, 5.0, 10.0, 55.0, 10.0, 2.0, 1.0, [0, 0, 0, 255], 1.0);
+        brush_line(
+            &mut l,
+            w,
+            h,
+            5.0,
+            10.0,
+            55.0,
+            10.0,
+            2.0,
+            1.0,
+            [0, 0, 0, 255],
+            1.0,
+        );
         for x in 5..=55 {
             assert!(l.get(w, x, 10)[3] > 0, "разрыв в x={x}");
         }
@@ -2330,7 +2734,20 @@ mod tests {
     fn ellipse_outline_is_closed() {
         let (w, h) = (80, 80);
         let mut l = empty(w, h);
-        ellipse(&mut l, w, h, 10.0, 10.0, 70.0, 70.0, false, 2.0, 1.0, [0, 0, 0, 255], 1.0);
+        ellipse(
+            &mut l,
+            w,
+            h,
+            10.0,
+            10.0,
+            70.0,
+            70.0,
+            false,
+            2.0,
+            1.0,
+            [0, 0, 0, 255],
+            1.0,
+        );
         // углы пустые, середина сторон закрашена
         assert_eq!(l.get(w, 10, 10)[3], 0);
         assert!(l.get(w, 40, 10)[3] > 0, "верх не нарисован");
@@ -2351,7 +2768,11 @@ mod tests {
         }
         flood_fill(&mut l, w, h, 1, 1, [255, 0, 0, 255], 1.0, 0, true);
         assert_eq!(l.get(w, 1, 1), [255, 0, 0, 255], "левая половина не залита");
-        assert_eq!(l.get(w, 8, 1), [255, 255, 255, 255], "заливка прошла сквозь стену");
+        assert_eq!(
+            l.get(w, 8, 1),
+            [255, 255, 255, 255],
+            "заливка прошла сквозь стену"
+        );
         assert_eq!(l.get(w, 5, 1), [0, 0, 0, 255], "стена повреждена");
     }
 
@@ -2360,14 +2781,31 @@ mod tests {
         let (w, h) = (80, 40);
         let mut l = empty(w, h);
         // резкий градиент: мягкость 0 -> цвета должны различаться вдоль оси
-        gradient(&mut l, w, h, 5.0, 20.0, 75.0, 20.0, [255, 0, 0, 255], [0, 0, 255, 255], 1.0, 0.0);
+        gradient(
+            &mut l,
+            w,
+            h,
+            5.0,
+            20.0,
+            75.0,
+            20.0,
+            [255, 0, 0, 255],
+            [0, 0, 255, 255],
+            1.0,
+            0.0,
+        );
         // смотрим строго на ось: y = 20.5 в координатах центров пикселей
         let left = l.get(w, 8, 20);
         let right = l.get(w, 72, 20);
         assert!(left[0] > left[2], "слева должен быть красный: {left:?}");
         assert!(right[2] > right[0], "справа должен быть синий: {right:?}");
         // вне полосы градиента пусто
-        assert_eq!(l.get(w, 40, 2)[3], 0, "выше оси должно быть пусто: {:?}", l.get(w, 40, 2));
+        assert_eq!(
+            l.get(w, 40, 2)[3],
+            0,
+            "выше оси должно быть пусто: {:?}",
+            l.get(w, 40, 2)
+        );
         assert_eq!(l.get(w, 40, 38)[3], 0, "ниже оси должно быть пусто");
     }
 
@@ -2376,12 +2814,46 @@ mod tests {
         let (w, h) = (80, 80);
         let mut hard = empty(w, h);
         let mut soft = empty(w, h);
-        gradient(&mut hard, w, h, 40.0, 20.0, 40.0, 60.0, [0, 0, 0, 255], [255, 255, 255, 255], 1.0, 0.0);
-        gradient(&mut soft, w, h, 40.0, 20.0, 40.0, 60.0, [0, 0, 0, 255], [255, 255, 255, 255], 1.0, 1.0);
+        gradient(
+            &mut hard,
+            w,
+            h,
+            40.0,
+            20.0,
+            40.0,
+            60.0,
+            [0, 0, 0, 255],
+            [255, 255, 255, 255],
+            1.0,
+            0.0,
+        );
+        gradient(
+            &mut soft,
+            w,
+            h,
+            40.0,
+            20.0,
+            40.0,
+            60.0,
+            [0, 0, 0, 255],
+            [255, 255, 255, 255],
+            1.0,
+            1.0,
+        );
         // жёсткий — узкая полоса в несколько пикселей, мягкий — широкая
-        assert!(soft.get(w, 40, 30)[3] > 0, "мягкий градиент должен быть широким");
-        assert_eq!(hard.get(w, 40, 12)[3], 0, "жёсткий градиент не должен доходить до y=12");
-        assert!(soft.get(w, 40, 12)[3] > 0, "мягкий градиент должен доходить до y=12");
+        assert!(
+            soft.get(w, 40, 30)[3] > 0,
+            "мягкий градиент должен быть широким"
+        );
+        assert_eq!(
+            hard.get(w, 40, 12)[3],
+            0,
+            "жёсткий градиент не должен доходить до y=12"
+        );
+        assert!(
+            soft.get(w, 40, 12)[3] > 0,
+            "мягкий градиент должен доходить до y=12"
+        );
     }
 
     #[test]
@@ -2394,7 +2866,11 @@ mod tests {
         }
         flood_fill(&mut l, w, h, 1, 1, [0, 255, 0, 255], 1.0, 0, false);
         assert_eq!(l.get(w, 1, 1), [0, 255, 0, 255]);
-        assert_eq!(l.get(w, 8, 1), [0, 255, 0, 255], "вторая область не заменена");
+        assert_eq!(
+            l.get(w, 8, 1),
+            [0, 255, 0, 255],
+            "вторая область не заменена"
+        );
     }
 
     #[test]

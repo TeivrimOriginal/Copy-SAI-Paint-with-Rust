@@ -1,4 +1,4 @@
-﻿//! Чтение и запись PSD (Photoshop Document) — со слоями, масками и папками.
+//! Чтение и запись PSD (Photoshop Document) — со слоями, масками и папками.
 //!
 //! Формат примитивный: заголовок, блок цветового режима, блок ресурсов,
 //! блок слоёв и масок и итоговая картинка в конце файла. Данные каналов идут
@@ -225,7 +225,10 @@ pub fn read_file(bytes: &[u8]) -> Result<PsdFile, String> {
         return Err(format!("режим {} не поддерживается (нужен RGB)", mode));
     }
     if channels < 3 || channels > 4 {
-        return Err(format!("{} каналов не поддерживается (нужно 3 или 4)", channels));
+        return Err(format!(
+            "{} каналов не поддерживается (нужно 3 или 4)",
+            channels
+        ));
     }
     // Блок цветового режима и блок ресурсов пропускаем по длине.
     for _ in 0..2 {
@@ -242,7 +245,12 @@ pub fn read_file(bytes: &[u8]) -> Result<PsdFile, String> {
     // Всё, что осталось в блоке (глобальная маска, доп. блоки), пропускаем.
     r.p = lm_end;
     let merged = read_merged(&mut r, channels, width, height)?;
-    Ok(PsdFile { width, height, layers, merged })
+    Ok(PsdFile {
+        width,
+        height,
+        layers,
+        merged,
+    })
 }
 
 /// Читает секцию слоёв внутри блока слоёв и масок (до `end` включительно).
@@ -455,7 +463,11 @@ fn read_merged(
         pixels[x * 4 + 2] = planes[2][x];
         pixels[x * 4 + 3] = if channels == 4 { planes[3][x] } else { 255 };
     }
-    Ok(PsdImage { width, height, pixels })
+    Ok(PsdImage {
+        width,
+        height,
+        pixels,
+    })
 }
 
 /// Строка-имя слоя: длина одним байтом, затем символы, всё до кратности 4.
@@ -469,7 +481,10 @@ fn read_pascal(r: &mut Reader) -> Result<String, String> {
 
 /// UTF-16BE в строку — так Photoshop хранит настоящее имя слоя.
 fn decode_utf16(b: &[u8]) -> String {
-    let units: Vec<u16> = b.chunks_exact(2).map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
+    let units: Vec<u16> = b
+        .chunks_exact(2)
+        .map(|c| u16::from_be_bytes([c[0], c[1]]))
+        .collect();
     String::from_utf16_lossy(&units)
 }
 
@@ -524,21 +539,34 @@ pub fn write_layers(width: usize, height: usize, composite: &[u8], layers: &[Out
     for l in layers.iter() {
         if l.group != group {
             if l.group.is_some() {
-                recs.push(Rec { kind: LayerKind::Bounding, layer: None });
+                recs.push(Rec {
+                    kind: LayerKind::Bounding,
+                    layer: None,
+                });
             }
             group = l.group;
         }
         let kind = if l.group_header {
-            if l.group_open { LayerKind::GroupOpen } else { LayerKind::GroupClosed }
+            if l.group_open {
+                LayerKind::GroupOpen
+            } else {
+                LayerKind::GroupClosed
+            }
         } else {
             LayerKind::Pixel
         };
         // У слоя-шапки может быть своё содержимое, а в PSD у папки каналов нет.
         // Поэтому содержимое пишем обычным слоем, а шапку — пустой папкой.
         if kind != LayerKind::Pixel && has_content(l.rgba) {
-            recs.push(Rec { kind: LayerKind::Pixel, layer: Some(l) });
+            recs.push(Rec {
+                kind: LayerKind::Pixel,
+                layer: Some(l),
+            });
         }
-        recs.push(Rec { kind, layer: Some(l) });
+        recs.push(Rec {
+            kind,
+            layer: Some(l),
+        });
     }
 
     let mut body: Vec<u8> = Vec::new();
@@ -550,7 +578,11 @@ pub fn write_layers(width: usize, height: usize, composite: &[u8], layers: &[Out
                 Some(l) => l.group.unwrap_or(l.name),
                 None => "Группа",
             };
-            let head = if rec.kind == LayerKind::Bounding { 3u32 } else { 1u32 };
+            let head = if rec.kind == LayerKind::Bounding {
+                3u32
+            } else {
+                1u32
+            };
             body.extend_from_slice(&0i32.to_be_bytes()); // кадр пустой
             body.extend_from_slice(&0i32.to_be_bytes());
             body.extend_from_slice(&0i32.to_be_bytes());
@@ -568,7 +600,12 @@ pub fn write_layers(width: usize, height: usize, composite: &[u8], layers: &[Out
                 ),
                 // У служебной границы группы маски нет, но её длина в блоке
                 // обязательна — иначе запись поедет.
-                None => (blend_key(BlendMode::Normal), 255u8, 0x02, 0u32.to_be_bytes().to_vec()),
+                None => (
+                    blend_key(BlendMode::Normal),
+                    255u8,
+                    0x02,
+                    0u32.to_be_bytes().to_vec(),
+                ),
             };
             body.extend_from_slice(&key);
             body.extend_from_slice(&[op]);
@@ -591,7 +628,10 @@ pub fn write_layers(width: usize, height: usize, composite: &[u8], layers: &[Out
             let mut plane: Vec<u8> = Vec::with_capacity(rw * rh);
             for y in 0..rh {
                 for x in 0..rw {
-                    plane.push(l.rgba[((y0 + y as i32) as usize * width + (x0 + x as i32) as usize) * 4 + c]);
+                    plane.push(
+                        l.rgba
+                            [((y0 + y as i32) as usize * width + (x0 + x as i32) as usize) * 4 + c],
+                    );
                 }
             }
             datas.push(plane_rows(&plane, rw, rh));
@@ -652,8 +692,8 @@ fn write_header(out: &mut Vec<u8>, width: usize, height: usize, channels: u16) {
 
 fn write_merged(out: &mut Vec<u8>, width: usize, height: usize, rgba: &[u8]) {
     out.extend_from_slice(&1u16.to_be_bytes()); // сжатие RLE
-    // Порядок как в Photoshop: у каждого канала сначала размеры строк,
-    // потом сами строки.
+                                                // Порядок как в Photoshop: у каждого канала сначала размеры строк,
+                                                // потом сами строки.
     for c in 0..4 {
         let mut rows: Vec<Vec<u8>> = Vec::with_capacity(height);
         for y in 0..height {
@@ -710,7 +750,11 @@ fn tight_rect(w: usize, h: usize, rgba: &[u8]) -> (i32, i32, i32, i32) {
             y1 = y1.max(yi + 1);
         }
     }
-    if x1 < 0 { (0, 0, 1, 1) } else { (x0, y0, x1, y1) }
+    if x1 < 0 {
+        (0, 0, 1, 1)
+    } else {
+        (x0, y0, x1, y1)
+    }
 }
 
 /// Служебные данные слоя: маска, пустые диапазоны, имя (в двух видах) и
@@ -744,7 +788,9 @@ fn extra_bytes(name: &str, section: Option<u32>, mask: Vec<u8>) -> Vec<u8> {
 
 /// Маска слоя в виде блока PSD. Маску, которая ничего не закрывает, не пишем.
 fn mask_bytes(w: usize, h: usize, mask: Option<&[u8]>) -> Vec<u8> {
-    let Some(m) = mask else { return 0u32.to_be_bytes().to_vec() };
+    let Some(m) = mask else {
+        return 0u32.to_be_bytes().to_vec();
+    };
     if m.len() != w * h || m.iter().all(|&v| v == 255) {
         return 0u32.to_be_bytes().to_vec();
     }
@@ -782,7 +828,10 @@ impl<'a> Reader<'a> {
 
     fn skip(&mut self, n: usize) -> Result<(), String> {
         if self.p + n > self.b.len() {
-            return Err(format!("блок {} байт не помещается (позиция {})", n, self.p));
+            return Err(format!(
+                "блок {} байт не помещается (позиция {})",
+                n, self.p
+            ));
         }
         self.p += n;
         Ok(())
@@ -881,8 +930,16 @@ mod tests {
             }
         }
         let img = read(&out).expect("прочитали PSD без альфы");
-        assert_eq!(&img.pixels[0..4], &[0, 60, 120, 255], "плоскости идут по каналам");
-        assert_eq!(&img.pixels[4..8], &[1, 61, 121, 255], "второй пиксель по той же логике");
+        assert_eq!(
+            &img.pixels[0..4],
+            &[0, 60, 120, 255],
+            "плоскости идут по каналам"
+        );
+        assert_eq!(
+            &img.pixels[4..8],
+            &[1, 61, 121, 255],
+            "второй пиксель по той же логике"
+        );
     }
 
     #[test]
@@ -1021,7 +1078,11 @@ mod tests {
         );
         assert_eq!(back.layers[3].name, "Папка", "имя шапки");
         assert_eq!(back.layers[2].name, "Внутри", "имя содержимого");
-        assert_eq!(back.layers[1].pixel(0, 0), [0, 0, 0, 0], "граница прозрачна");
+        assert_eq!(
+            back.layers[1].pixel(0, 0),
+            [0, 0, 0, 0],
+            "граница прозрачна"
+        );
     }
 
     #[test]
@@ -1099,7 +1160,11 @@ mod tests {
         let back = read_file(&out).expect("прочитали сдвинутый слой");
         assert_eq!(back.layers.len(), 1);
         let l = &back.layers[0];
-        assert_eq!((l.left, l.top, l.width, l.height), (1, 1, 2, 2), "кадр слоя");
+        assert_eq!(
+            (l.left, l.top, l.width, l.height),
+            (1, 1, 2, 2),
+            "кадр слоя"
+        );
         assert_eq!(l.name, "Сдвинутый", "имя из luni");
         // Плоскости собраны так: 0, 30, 60, 90 по каждому каналу.
         assert_eq!(l.pixel(1, 1), [90, 95, 100, 105], "пиксель внутри кадра");
@@ -1118,7 +1183,11 @@ mod tests {
         assert_eq!(blend_of(b"diff"), BlendMode::Difference);
         assert_eq!(blend_of(b"div "), BlendMode::ColorDodge);
         assert_eq!(blend_of(b"idiv"), BlendMode::ColorBurn);
-        assert_eq!(blend_of(b"vivid"), BlendMode::Normal, "цветовой режим не умеем");
+        assert_eq!(
+            blend_of(b"vivid"),
+            BlendMode::Normal,
+            "цветовой режим не умеем"
+        );
         assert_eq!(blend_of(b"sLit"), BlendMode::Normal, "мягкий свет не умеем");
         // Все наши режимы пишутся ключом, который читается обратно в тот же.
         for m in BlendMode::ALL {

@@ -4,7 +4,10 @@
 //! и открытых выпадающих списков: каждый кадр панели собираются заново и
 //! сразу превращаются в список квадов (`gl::Item`).
 
-use crate::renderer::{Item, Tri, UNIT_ATLAS, UNIT_BG, UNIT_CANVAS, UNIT_CHECKER, UNIT_MASKS, UNIT_SEL, UNIT_SOLID, UNIT_THUMBS, UNIT_TOP};
+use crate::renderer::{
+    Item, Tri, UNIT_ATLAS, UNIT_BG, UNIT_CANVAS, UNIT_CHECKER, UNIT_MASKS, UNIT_SEL, UNIT_SOLID,
+    UNIT_THUMBS, UNIT_TOP,
+};
 use crate::text::{Fonts, Weight};
 
 pub type Rect = [f32; 4];
@@ -97,7 +100,14 @@ impl Ui {
         }
     }
 
-    pub fn begin(&mut self, mouse: (f32, f32), pressed: bool, released: bool, down: bool, wheel: f32) {
+    pub fn begin(
+        &mut self,
+        mouse: (f32, f32),
+        pressed: bool,
+        released: bool,
+        down: bool,
+        wheel: f32,
+    ) {
         self.items.clear();
         self.tris.clear();
         self.tooltip = None;
@@ -157,7 +167,10 @@ impl Ui {
         let (f, x, y) = (self.frame_no, self.mouse.0, self.mouse.1);
         let dbl = match self.last_press {
             Some((pid, pf, px, py)) => {
-                pid == id && f.saturating_sub(pf) <= 12 && (x - px).abs() < 5.0 && (y - py).abs() < 5.0
+                pid == id
+                    && f.saturating_sub(pf) <= 12
+                    && (x - px).abs() < 5.0
+                    && (y - py).abs() < 5.0
             }
             None => false,
         };
@@ -168,8 +181,14 @@ impl Ui {
     /// Миниатюра слоя из атласа миниатюр.
     pub fn thumb(&mut self, r: Rect, uv: [f32; 4]) {
         self.items.push(Item {
-            x0: r[0], y0: r[1], x1: r[2], y1: r[3],
-            u0: uv[0], v0: uv[1], u1: uv[2], v1: uv[3],
+            x0: r[0],
+            y0: r[1],
+            x1: r[2],
+            y1: r[3],
+            u0: uv[0],
+            v0: uv[1],
+            u1: uv[2],
+            v1: uv[3],
             color: [1.0, 1.0, 1.0, 1.0],
             unit: UNIT_THUMBS,
             clip: self.clip,
@@ -179,8 +198,14 @@ impl Ui {
     /// Миниатюра маски слоя из атласа масок (серое покрытие).
     pub fn mask_thumb(&mut self, r: Rect, uv: [f32; 4], alpha: f32) {
         self.items.push(Item {
-            x0: r[0], y0: r[1], x1: r[2], y1: r[3],
-            u0: uv[0], v0: uv[1], u1: uv[2], v1: uv[3],
+            x0: r[0],
+            y0: r[1],
+            x1: r[2],
+            y1: r[3],
+            u0: uv[0],
+            v0: uv[1],
+            u1: uv[2],
+            v1: uv[3],
             color: [1.0, 1.0, 1.0, alpha],
             unit: UNIT_MASKS,
             clip: self.clip,
@@ -190,8 +215,14 @@ impl Ui {
     /// Квад с произвольной текстурой (плавающий фрагмент, миниатюра).
     pub fn textured(&mut self, r: Rect, uv: [f32; 4], unit: u8) {
         self.items.push(Item {
-            x0: r[0], y0: r[1], x1: r[2], y1: r[3],
-            u0: uv[0], v0: uv[1], u1: uv[2], v1: uv[3],
+            x0: r[0],
+            y0: r[1],
+            x1: r[2],
+            y1: r[3],
+            u0: uv[0],
+            v0: uv[1],
+            u1: uv[2],
+            v1: uv[3],
             color: [1.0, 1.0, 1.0, 1.0],
             unit,
             clip: self.clip,
@@ -203,14 +234,17 @@ impl Ui {
         if r[2] <= r[0] || r[3] <= r[1] || color[3] <= 0.0 {
             return;
         }
-        self.items.push(Item::new(r[0], r[1], r[2], r[3], color, UNIT_BG, self.clip));
+        self.items
+            .push(Item::new(r[0], r[1], r[2], r[3], color, UNIT_BG, self.clip));
     }
 
     pub fn quad(&mut self, r: Rect, color: Color) {
         if r[2] <= r[0] || r[3] <= r[1] || color[3] <= 0.0 {
             return;
         }
-        self.items.push(Item::new(r[0], r[1], r[2], r[3], color, UNIT_SOLID, self.clip));
+        self.items.push(Item::new(
+            r[0], r[1], r[2], r[3], color, UNIT_SOLID, self.clip,
+        ));
     }
 
     /// Квад поверх панелей, но под текстом: им рисуется раскрытый список,
@@ -219,7 +253,9 @@ impl Ui {
         if r[2] <= r[0] || r[3] <= r[1] || color[3] <= 0.0 {
             return;
         }
-        self.items.push(Item::new(r[0], r[1], r[2], r[3], color, UNIT_TOP, self.clip));
+        self.items.push(Item::new(
+            r[0], r[1], r[2], r[3], color, UNIT_TOP, self.clip,
+        ));
     }
 
     /// Рамка поверх всего — вместе с `quad_top`.
@@ -236,8 +272,14 @@ impl Ui {
 
     pub fn canvas_quad(&mut self, r: Rect, uv: [f32; 4]) {
         self.items.push(Item {
-            x0: r[0], y0: r[1], x1: r[2], y1: r[3],
-            u0: uv[0], v0: uv[1], u1: uv[2], v1: uv[3],
+            x0: r[0],
+            y0: r[1],
+            x1: r[2],
+            y1: r[3],
+            u0: uv[0],
+            v0: uv[1],
+            u1: uv[2],
+            v1: uv[3],
             color: [1.0, 1.0, 1.0, 1.0],
             unit: UNIT_CANVAS,
             clip: self.clip,
@@ -251,8 +293,14 @@ impl Ui {
         let u1 = r[2] / cell;
         let v1 = r[3] / cell;
         self.items.push(Item {
-            x0: r[0], y0: r[1], x1: r[2], y1: r[3],
-            u0, v0, u1, v1,
+            x0: r[0],
+            y0: r[1],
+            x1: r[2],
+            y1: r[3],
+            u0,
+            v0,
+            u1,
+            v1,
             color: [1.0, 1.0, 1.0, 1.0],
             unit: UNIT_CHECKER,
             clip: self.clip,
@@ -334,8 +382,14 @@ impl Ui {
         );
         for (rect, uv, _) in self.scratch.iter() {
             self.items.push(Item {
-                x0: rect[0], y0: rect[1], x1: rect[2], y1: rect[3],
-                u0: uv[0], v0: uv[1], u1: uv[2], v1: uv[3],
+                x0: rect[0],
+                y0: rect[1],
+                x1: rect[2],
+                y1: rect[3],
+                u0: uv[0],
+                v0: uv[1],
+                u1: uv[2],
+                v1: uv[3],
                 color,
                 unit: UNIT_ATLAS,
                 clip: self.clip,
@@ -348,8 +402,14 @@ impl Ui {
     /// и гасит пиксели, которых в ней нет.
     pub fn selection_quad(&mut self, r: Rect) {
         self.items.push(Item {
-            x0: r[0], y0: r[1], x1: r[2], y1: r[3],
-            u0: 0.0, v0: 0.0, u1: 1.0, v1: 1.0,
+            x0: r[0],
+            y0: r[1],
+            x1: r[2],
+            y1: r[3],
+            u0: 0.0,
+            v0: 0.0,
+            u1: 1.0,
+            v1: 1.0,
             color: [0.0, 0.0, 0.0, 0.28],
             unit: UNIT_SEL,
             clip: self.clip,
@@ -358,18 +418,38 @@ impl Ui {
 
     /// Текст по центру прямоугольника (по вертикали — по базовой линии).
     pub fn text_center(&mut self, r: Rect, s: &str, size: f32, color: Color, bold: bool) {
-        let w = self.fonts.text_width(s, size, if bold { Weight::Bold } else { Weight::Regular });
+        let w = self
+            .fonts
+            .text_width(s, size, if bold { Weight::Bold } else { Weight::Regular });
         let h = self.fonts.line_height(size);
-        self.text(r[0] + (r[2] - r[0] - w) / 2.0, r[1] + (r[3] - r[1] + h * 0.72) / 2.0, s, size, color, bold);
+        self.text(
+            r[0] + (r[2] - r[0] - w) / 2.0,
+            r[1] + (r[3] - r[1] + h * 0.72) / 2.0,
+            s,
+            size,
+            color,
+            bold,
+        );
     }
 
-    pub fn text_right(&mut self, x_right: f32, y: f32, s: &str, size: f32, color: Color, bold: bool) {
-        let w = self.fonts.text_width(s, size, if bold { Weight::Bold } else { Weight::Regular });
+    pub fn text_right(
+        &mut self,
+        x_right: f32,
+        y: f32,
+        s: &str,
+        size: f32,
+        color: Color,
+        bold: bool,
+    ) {
+        let w = self
+            .fonts
+            .text_width(s, size, if bold { Weight::Bold } else { Weight::Regular });
         self.text(x_right - w, y, s, size, color, bold);
     }
 
     pub fn text_width(&mut self, s: &str, size: f32, bold: bool) -> f32 {
-        self.fonts.text_width(s, size, if bold { Weight::Bold } else { Weight::Regular })
+        self.fonts
+            .text_width(s, size, if bold { Weight::Bold } else { Weight::Regular })
     }
 
     pub fn line_height(&mut self, size: f32) -> f32 {
@@ -378,7 +458,8 @@ impl Ui {
 
     /// Шаг строки по вертикали — для вертикального текста на холсте.
     pub fn vertical_step(&self, size: f32, bold: bool) -> f32 {
-        self.fonts.vertical_step(size, if bold { Weight::Bold } else { Weight::Regular })
+        self.fonts
+            .vertical_step(size, if bold { Weight::Bold } else { Weight::Regular })
     }
 
     pub fn push_clip(&mut self, r: Rect) {
@@ -399,8 +480,14 @@ impl Ui {
 
     fn hovered(&self, r: Rect) -> bool {
         let (mx, my) = self.mouse;
-        mx >= r[0] && mx < r[2] && my >= r[1] && my < r[3]
-            && mx >= self.clip[0] && mx < self.clip[2] && my >= self.clip[1] && my < self.clip[3]
+        mx >= r[0]
+            && mx < r[2]
+            && my >= r[1]
+            && my < r[3]
+            && mx >= self.clip[0]
+            && mx < self.clip[2]
+            && my >= self.clip[1]
+            && my < self.clip[3]
     }
 
     fn capture(&mut self, id: u32) {
@@ -428,7 +515,13 @@ impl Ui {
         if self.released && active {
             self.active = 0;
         }
-        let bg = if active { theme::ACCENT_DIM } else if hot { theme::PANEL_HI } else { theme::FIELD };
+        let bg = if active {
+            theme::ACCENT_DIM
+        } else if hot {
+            theme::PANEL_HI
+        } else {
+            theme::FIELD
+        };
         self.quad(r, bg);
         self.frame(r, theme::BORDER, 1.0);
         self.text_center(r, label, FONT_UI, theme::TEXT, false);
@@ -452,7 +545,13 @@ impl Ui {
         if self.released && active {
             self.active = 0;
         }
-        let bg = if active { theme::ACCENT_DIM } else if hot { theme::PANEL_HI } else { theme::FIELD };
+        let bg = if active {
+            theme::ACCENT_DIM
+        } else if hot {
+            theme::PANEL_HI
+        } else {
+            theme::FIELD
+        };
         self.quad(r, bg);
         self.frame(r, theme::BORDER, 1.0);
         self.text_center(r, label, FONT_SMALL, theme::TEXT, false);
@@ -488,7 +587,11 @@ impl Ui {
         }
         let cx = (r[0] + r[2]) / 2.0;
         let cy = (r[1] + r[3]) / 2.0;
-        let col = if selected { [1.0, 1.0, 1.0, 1.0] } else { theme::TEXT };
+        let col = if selected {
+            [1.0, 1.0, 1.0, 1.0]
+        } else {
+            theme::TEXT
+        };
         self.icon(icon, cx, cy, (r[3] - r[1]) * 0.3, col);
         if clicked {
             self.consumed_click = true;
@@ -499,61 +602,147 @@ impl Ui {
     pub fn icon(&mut self, kind: Icon, cx: f32, cy: f32, s: f32, color: Color) {
         match kind {
             Icon::Pencil => {
-                self.line(cx - s * 0.6, cy + s * 0.6, cx + s * 0.6, cy - s * 0.6, color, 2.0);
-                self.quad([cx + s * 0.3, cy - s * 0.9, cx + s * 0.75, cy - s * 0.45], color);
+                self.line(
+                    cx - s * 0.6,
+                    cy + s * 0.6,
+                    cx + s * 0.6,
+                    cy - s * 0.6,
+                    color,
+                    2.0,
+                );
+                self.quad(
+                    [cx + s * 0.3, cy - s * 0.9, cx + s * 0.75, cy - s * 0.45],
+                    color,
+                );
             }
             Icon::Brush => {
-                self.line(cx - s * 0.2, cy + s * 0.8, cx + s * 0.7, cy - s * 0.6, color, 2.5);
+                self.line(
+                    cx - s * 0.2,
+                    cy + s * 0.8,
+                    cx + s * 0.7,
+                    cy - s * 0.6,
+                    color,
+                    2.5,
+                );
                 self.circle(cx - s * 0.45, cy + s * 0.55, s * 0.3, color);
             }
             Icon::Eraser => {
-                self.quad([cx - s * 0.7, cy - s * 0.35, cx + s * 0.7, cy + s * 0.5], color);
-                self.quad([cx - s * 0.7, cy - s * 0.35, cx + s * 0.1, cy - s * 0.05], [
-                    color[0] * 0.6, color[1] * 0.6, color[2] * 0.6, color[3],
-                ]);
+                self.quad(
+                    [cx - s * 0.7, cy - s * 0.35, cx + s * 0.7, cy + s * 0.5],
+                    color,
+                );
+                self.quad(
+                    [cx - s * 0.7, cy - s * 0.35, cx + s * 0.1, cy - s * 0.05],
+                    [color[0] * 0.6, color[1] * 0.6, color[2] * 0.6, color[3]],
+                );
             }
             Icon::Line => {
-                self.line(cx - s * 0.7, cy + s * 0.7, cx + s * 0.7, cy - s * 0.7, color, 2.0);
+                self.line(
+                    cx - s * 0.7,
+                    cy + s * 0.7,
+                    cx + s * 0.7,
+                    cy - s * 0.7,
+                    color,
+                    2.0,
+                );
                 self.circle(cx - s * 0.7, cy + s * 0.7, 2.0, color);
                 self.circle(cx + s * 0.7, cy - s * 0.7, 2.0, color);
             }
-            Icon::Rect => self.frame([cx - s * 0.7, cy - s * 0.55, cx + s * 0.7, cy + s * 0.55], color, 2.0),
+            Icon::Rect => self.frame(
+                [cx - s * 0.7, cy - s * 0.55, cx + s * 0.7, cy + s * 0.55],
+                color,
+                2.0,
+            ),
             Icon::Ellipse => self.ring(cx, cy, s * 0.62, color, 2.0),
             Icon::Fill => {
-                self.quad([cx - s * 0.7, cy - s * 0.2, cx + s * 0.7, cy + s * 0.7], color);
-                self.quad([cx - s * 0.25, cy - s * 0.8, cx + s * 0.25, cy - s * 0.2], color);
+                self.quad(
+                    [cx - s * 0.7, cy - s * 0.2, cx + s * 0.7, cy + s * 0.7],
+                    color,
+                );
+                self.quad(
+                    [cx - s * 0.25, cy - s * 0.8, cx + s * 0.25, cy - s * 0.2],
+                    color,
+                );
             }
             Icon::Eyedropper => {
-                self.line(cx - s * 0.5, cy + s * 0.7, cx + s * 0.5, cy - s * 0.3, color, 3.0);
-                self.quad([cx + s * 0.2, cy - s * 0.8, cx + s * 0.8, cy - s * 0.2], color);
+                self.line(
+                    cx - s * 0.5,
+                    cy + s * 0.7,
+                    cx + s * 0.5,
+                    cy - s * 0.3,
+                    color,
+                    3.0,
+                );
+                self.quad(
+                    [cx + s * 0.2, cy - s * 0.8, cx + s * 0.8, cy - s * 0.2],
+                    color,
+                );
             }
             Icon::Pan => {
                 self.line(cx - s * 0.7, cy, cx + s * 0.7, cy, color, 2.0);
                 self.line(cx, cy - s * 0.6, cx, cy + s * 0.6, color, 2.0);
                 for (dx, dy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
                     self.line(
-                        cx + dx * s * 0.5, cy + dy * s * 0.5,
-                        cx + dx * s * 0.8, cy + dy * s * 0.8, color, 2.0,
+                        cx + dx * s * 0.5,
+                        cy + dy * s * 0.5,
+                        cx + dx * s * 0.8,
+                        cy + dy * s * 0.8,
+                        color,
+                        2.0,
                     );
                 }
             }
             Icon::Undo => {
                 self.ring(cx, cy, s * 0.6, color, 2.0);
-                self.quad([cx - s * 0.9, cy - s * 0.9, cx - s * 0.2, cy - s * 0.2], theme::PANEL_HI);
+                self.quad(
+                    [cx - s * 0.9, cy - s * 0.9, cx - s * 0.2, cy - s * 0.2],
+                    theme::PANEL_HI,
+                );
             }
             Icon::Redo => {
                 self.ring(cx, cy, s * 0.6, color, 2.0);
-                self.quad([cx + s * 0.2, cy - s * 0.9, cx + s * 0.9, cy - s * 0.2], theme::PANEL_HI);
+                self.quad(
+                    [cx + s * 0.2, cy - s * 0.9, cx + s * 0.9, cy - s * 0.2],
+                    theme::PANEL_HI,
+                );
             }
             Icon::Swap => {
-                self.line(cx - s * 0.6, cy - s * 0.4, cx + s * 0.6, cy - s * 0.4, color, 2.0);
-                self.line(cx - s * 0.6, cy + s * 0.4, cx + s * 0.6, cy + s * 0.4, color, 2.0);
+                self.line(
+                    cx - s * 0.6,
+                    cy - s * 0.4,
+                    cx + s * 0.6,
+                    cy - s * 0.4,
+                    color,
+                    2.0,
+                );
+                self.line(
+                    cx - s * 0.6,
+                    cy + s * 0.4,
+                    cx + s * 0.6,
+                    cy + s * 0.4,
+                    color,
+                    2.0,
+                );
             }
             Icon::Eye | Icon::EyeOff => {
                 self.ring(cx, cy, s * 0.5, color, 2.0);
                 if matches!(kind, Icon::EyeOff) {
-                    self.line(cx - s * 0.7, cy - s * 0.7, cx + s * 0.7, cy + s * 0.7, theme::PANEL, 2.5);
-                    self.line(cx - s * 0.7, cy - s * 0.7, cx + s * 0.7, cy + s * 0.7, color, 1.5);
+                    self.line(
+                        cx - s * 0.7,
+                        cy - s * 0.7,
+                        cx + s * 0.7,
+                        cy + s * 0.7,
+                        theme::PANEL,
+                        2.5,
+                    );
+                    self.line(
+                        cx - s * 0.7,
+                        cy - s * 0.7,
+                        cx + s * 0.7,
+                        cy + s * 0.7,
+                        color,
+                        1.5,
+                    );
                 }
             }
             Icon::Gradient => {
@@ -612,11 +801,23 @@ impl Ui {
                 for i in 0..p.len() {
                     let a = p[i];
                     let b = p[(i + 1) % p.len()];
-                    self.line(cx + a.0 * s, cy + a.1 * s, cx + b.0 * s, cy + b.1 * s, color, 1.6);
+                    self.line(
+                        cx + a.0 * s,
+                        cy + a.1 * s,
+                        cx + b.0 * s,
+                        cy + b.1 * s,
+                        color,
+                        1.6,
+                    );
                 }
                 for a in p {
                     self.quad(
-                        [cx + a.0 * s - 1.8, cy + a.1 * s - 1.8, cx + a.0 * s + 1.8, cy + a.1 * s + 1.8],
+                        [
+                            cx + a.0 * s - 1.8,
+                            cy + a.1 * s - 1.8,
+                            cx + a.0 * s + 1.8,
+                            cy + a.1 * s + 1.8,
+                        ],
                         color,
                     );
                 }
@@ -626,7 +827,14 @@ impl Ui {
                 let s2 = s * 0.62;
                 self.line(cx, cy + s2 * 0.9, cx - s2, cy - s2, color, 2.0);
                 self.line(cx, cy + s2 * 0.9, cx + s2, cy - s2, color, 2.0);
-                self.line(cx - s2 * 0.55, cy - s2 * 0.05, cx + s2 * 0.55, cy - s2 * 0.05, color, 2.0);
+                self.line(
+                    cx - s2 * 0.55,
+                    cy - s2 * 0.05,
+                    cx + s2 * 0.55,
+                    cy - s2 * 0.05,
+                    color,
+                    2.0,
+                );
             }
         }
     }
@@ -667,7 +875,15 @@ impl Ui {
     }
 
     /// Поле-«число»: подпись слева, значение справа, перетаскивание меняет.
-    pub fn value_field(&mut self, r: Rect, label: &str, v: &mut f32, min: f32, max: f32, step: f32) -> bool {
+    pub fn value_field(
+        &mut self,
+        r: Rect,
+        label: &str,
+        v: &mut f32,
+        min: f32,
+        max: f32,
+        step: f32,
+    ) -> bool {
         // Протяжка идёт несколько кадров, поэтому id — по положению поля.
         let id = Self::rect_id(r);
         let hot = self.hovered(r);
@@ -690,7 +906,14 @@ impl Ui {
         if self.released && active {
             self.active = 0;
         }
-        self.quad(r, if hot || active { theme::PANEL_HI } else { theme::FIELD });
+        self.quad(
+            r,
+            if hot || active {
+                theme::PANEL_HI
+            } else {
+                theme::FIELD
+            },
+        );
         self.frame(r, theme::BORDER, 1.0);
         let h = self.line_height(FONT_SMALL);
         let y = r[1] + (r[3] - r[1] + h * 0.72) / 2.0;
@@ -745,11 +968,32 @@ impl Ui {
         self.quad(box_r, if *v { theme::ACCENT } else { theme::FIELD });
         self.frame(box_r, theme::BORDER, 1.0);
         if *v {
-            self.line(box_r[0] + 3.0, box_r[1] + 7.0, box_r[0] + 6.0, box_r[1] + 11.0, [1.0; 4], 2.0);
-            self.line(box_r[0] + 6.0, box_r[1] + 11.0, box_r[0] + 11.0, box_r[1] + 3.0, [1.0; 4], 2.0);
+            self.line(
+                box_r[0] + 3.0,
+                box_r[1] + 7.0,
+                box_r[0] + 6.0,
+                box_r[1] + 11.0,
+                [1.0; 4],
+                2.0,
+            );
+            self.line(
+                box_r[0] + 6.0,
+                box_r[1] + 11.0,
+                box_r[0] + 11.0,
+                box_r[1] + 3.0,
+                [1.0; 4],
+                2.0,
+            );
         }
         let h = self.line_height(FONT_SMALL);
-        self.text(r[0] + 20.0, r[1] + (r[3] - r[1] + h * 0.72) / 2.0 - 2.0, label, FONT_SMALL, theme::TEXT, false);
+        self.text(
+            r[0] + 20.0,
+            r[1] + (r[3] - r[1] + h * 0.72) / 2.0 - 2.0,
+            label,
+            FONT_SMALL,
+            theme::TEXT,
+            false,
+        );
         if clicked {
             *v = !*v;
             self.consumed_click = true;
@@ -764,7 +1008,11 @@ impl Ui {
         if hot {
             self.hot = id;
             if self.pressed {
-                self.open_menu = if self.open_menu == Some(id) { None } else { Some(id) };
+                self.open_menu = if self.open_menu == Some(id) {
+                    None
+                } else {
+                    Some(id)
+                };
                 self.consumed_click = true;
             }
         }
@@ -773,7 +1021,14 @@ impl Ui {
         self.frame(r, if open { theme::ACCENT } else { theme::BORDER }, 1.0);
         let h = self.line_height(FONT_SMALL);
         let y = r[1] + (r[3] - r[1] + h * 0.72) / 2.0;
-        self.text(r[0] + 6.0, y, items.get(cur).copied().unwrap_or("—"), FONT_SMALL, theme::TEXT, false);
+        self.text(
+            r[0] + 6.0,
+            y,
+            items.get(cur).copied().unwrap_or("—"),
+            FONT_SMALL,
+            theme::TEXT,
+            false,
+        );
         // стрелка
         let ax = r[2] - 12.0;
         let ay = r[1] + r[3] / 2.0;
@@ -793,7 +1048,12 @@ impl Ui {
             self.quad_top(list, theme::PANEL);
             self.frame_top(list, theme::BORDER, 1.0);
             for (i, it) in items.iter().enumerate() {
-                let ir = [list[0] + 1.0, list[1] + 1.0 + i as f32 * ih, list[2] - 1.0, list[1] + 1.0 + (i + 1) as f32 * ih];
+                let ir = [
+                    list[0] + 1.0,
+                    list[1] + 1.0 + i as f32 * ih,
+                    list[2] - 1.0,
+                    list[1] + 1.0 + (i + 1) as f32 * ih,
+                ];
                 if self.hovered(ir) && self.pressed {
                     self.open_menu = None;
                     self.consumed_click = true;
@@ -803,7 +1063,14 @@ impl Ui {
                     self.quad_top([ir[0], ir[1], ir[2], ir[3]], [1.0, 1.0, 1.0, 0.03]);
                 }
                 let lh = self.line_height(FONT_SMALL);
-                self.text(ir[0] + 6.0, ir[1] + (ih + lh * 0.72) / 2.0, it, FONT_SMALL, theme::TEXT, false);
+                self.text(
+                    ir[0] + 6.0,
+                    ir[1] + (ih + lh * 0.72) / 2.0,
+                    it,
+                    FONT_SMALL,
+                    theme::TEXT,
+                    false,
+                );
             }
         }
         None
@@ -838,7 +1105,12 @@ impl Ui {
     /// Цветовой квад с шахматкой под альфой.
     pub fn swatch(&mut self, r: Rect, c: [u8; 4]) {
         self.checker(r, 8.0);
-        let col = [c[0] as f32 / 255.0, c[1] as f32 / 255.0, c[2] as f32 / 255.0, c[3] as f32 / 255.0];
+        let col = [
+            c[0] as f32 / 255.0,
+            c[1] as f32 / 255.0,
+            c[2] as f32 / 255.0,
+            c[3] as f32 / 255.0,
+        ];
         self.quad(r, col);
         self.frame(r, theme::BORDER, 1.0);
     }
@@ -879,15 +1151,48 @@ impl Ui {
             }
             self.keys = rest;
         }
-        self.quad(r, if focused { theme::PANEL_HI } else { theme::FIELD });
-        self.frame(r, if focused { theme::ACCENT } else { theme::BORDER }, 1.0);
+        self.quad(
+            r,
+            if focused {
+                theme::PANEL_HI
+            } else {
+                theme::FIELD
+            },
+        );
+        self.frame(
+            r,
+            if focused {
+                theme::ACCENT
+            } else {
+                theme::BORDER
+            },
+            1.0,
+        );
         let h = self.line_height(FONT_SMALL);
         let y = r[1] + (r[3] - r[1] + h * 0.72) / 2.0;
-        let shown = if value.is_empty() { "—" } else { value.as_str() };
-        self.text(r[0] + 6.0, y, shown, FONT_SMALL, if value.is_empty() { theme::TEXT_DIM } else { theme::TEXT }, false);
+        let shown = if value.is_empty() {
+            "—"
+        } else {
+            value.as_str()
+        };
+        self.text(
+            r[0] + 6.0,
+            y,
+            shown,
+            FONT_SMALL,
+            if value.is_empty() {
+                theme::TEXT_DIM
+            } else {
+                theme::TEXT
+            },
+            false,
+        );
         if focused && ((self.frame_no as i32) / 30) % 2 == 0 {
             let w = self.text_width(value, FONT_SMALL, false);
-            self.quad([r[0] + 6.0 + w + 1.0, y - h * 0.72, r[0] + 8.0 + w, y + 2.0], theme::ACCENT);
+            self.quad(
+                [r[0] + 6.0 + w + 1.0, y - h * 0.72, r[0] + 8.0 + w, y + 2.0],
+                theme::ACCENT,
+            );
         }
         focused
     }
@@ -917,7 +1222,12 @@ pub enum Icon {
 }
 
 pub fn rgba(c: [u8; 4]) -> Color {
-    [c[0] as f32 / 255.0, c[1] as f32 / 255.0, c[2] as f32 / 255.0, c[3] as f32 / 255.0]
+    [
+        c[0] as f32 / 255.0,
+        c[1] as f32 / 255.0,
+        c[2] as f32 / 255.0,
+        c[3] as f32 / 255.0,
+    ]
 }
 
 pub fn fmt_num(v: f32) -> String {
@@ -927,4 +1237,3 @@ pub fn fmt_num(v: f32) -> String {
         format!("{:.2}", v)
     }
 }
-

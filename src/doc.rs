@@ -279,7 +279,11 @@ impl Layer {
                 ((s as u32 * a * 255 + d as u32 * da * inv) / (out_a * 255)) as u8
             }
         };
-        let nc = [ch(c[0], self.pixels[i]), ch(c[1], self.pixels[i + 1]), ch(c[2], self.pixels[i + 2])];
+        let nc = [
+            ch(c[0], self.pixels[i]),
+            ch(c[1], self.pixels[i + 1]),
+            ch(c[2], self.pixels[i + 2]),
+        ];
         self.pixels[i] = nc[0];
         self.pixels[i + 1] = nc[1];
         self.pixels[i + 2] = nc[2];
@@ -367,7 +371,11 @@ pub struct History {
 
 impl History {
     pub fn new(limit: usize) -> Self {
-        Self { steps: Vec::new(), undone: Vec::new(), limit }
+        Self {
+            steps: Vec::new(),
+            undone: Vec::new(),
+            limit,
+        }
     }
 
     /// Записывает шаг. limit — 0, чтобы история не росла (в тестах документов).
@@ -375,7 +383,10 @@ impl History {
         if self.limit == 0 {
             return;
         }
-        self.steps.push(Step { name: name.to_string(), action: a });
+        self.steps.push(Step {
+            name: name.to_string(),
+            action: a,
+        });
         if self.steps.len() > self.limit {
             self.steps.remove(0);
         }
@@ -502,13 +513,12 @@ impl Document {
 
     pub fn layer_name(&self, i: usize) -> String {
         let base = self.layers[i].meta.name.clone();
-        let n = self
-            .layers
-            .iter()
-            .filter(|l| l.meta.name == base)
-            .count();
+        let n = self.layers.iter().filter(|l| l.meta.name == base).count();
         if n > 1 {
-            let same_before = self.layers[..i].iter().filter(|l| l.meta.name == base).count();
+            let same_before = self.layers[..i]
+                .iter()
+                .filter(|l| l.meta.name == base)
+                .count();
             format!("{} {}", base, same_before + 1)
         } else {
             base
@@ -543,7 +553,11 @@ impl Document {
                 _ => None,
             };
             // Прижатый слой режется по альфе базового слоя.
-            let clip: Option<Vec<u8>> = if layer.meta.clipped { base_alpha.clone() } else { None };
+            let clip: Option<Vec<u8>> = if layer.meta.clipped {
+                base_alpha.clone()
+            } else {
+                None
+            };
             if !layer.meta.clipped {
                 // Слой становится базой для всех прижатых над ним.
                 base_alpha = Some(px.iter().skip(3).step_by(4).copied().collect::<Vec<u8>>());
@@ -567,16 +581,25 @@ impl Document {
                 }
                 if fx.shadow {
                     let sh = crate::raster::layer_shadow(
-                        self.width, self.height, &alpha,
-                        fx.shadow_dx as i32, fx.shadow_dy as i32,
-                        fx.shadow_blur, fx.shadow_color, fx.shadow_opacity * op,
+                        self.width,
+                        self.height,
+                        &alpha,
+                        fx.shadow_dx as i32,
+                        fx.shadow_dy as i32,
+                        fx.shadow_blur,
+                        fx.shadow_color,
+                        fx.shadow_opacity * op,
                     );
                     crate::raster::over(out, self.width, self.height, &sh, 1.0);
                 }
                 if fx.outline {
                     let ring = crate::raster::layer_outline(
-                        self.width, self.height, &alpha,
-                        fx.outline_size, fx.outline_color, op,
+                        self.width,
+                        self.height,
+                        &alpha,
+                        fx.outline_size,
+                        fx.outline_color,
+                        op,
                     );
                     crate::raster::over(out, self.width, self.height, &ring, 1.0);
                 }
@@ -600,7 +623,11 @@ impl Document {
                 }
                 let sa = (a / 255.0) * op;
                 let src = [px[i * 4] as f32, px[i * 4 + 1] as f32, px[i * 4 + 2] as f32];
-                let dst = [out[i * 4] as f32, out[i * 4 + 1] as f32, out[i * 4 + 2] as f32];
+                let dst = [
+                    out[i * 4] as f32,
+                    out[i * 4 + 1] as f32,
+                    out[i * 4 + 2] as f32,
+                ];
                 let da = out[i * 4 + 3] as f32 / 255.0;
                 let blended = mode.mix(src, dst);
                 let oa = sa + da * (1.0 - sa);
@@ -757,7 +784,11 @@ impl Document {
         let mut out = vec![0u8; src.len()];
         for y in 0..h {
             for x in 0..w {
-                let (sx, sy) = if horizontal { (w - 1 - x, y) } else { (x, h - 1 - y) };
+                let (sx, sy) = if horizontal {
+                    (w - 1 - x, y)
+                } else {
+                    (x, h - 1 - y)
+                };
                 let s = (sy * w + sx) * 4;
                 let d = (y * w + x) * 4;
                 out[d..d + 4].copy_from_slice(&src[s..s + 4]);
@@ -807,7 +838,11 @@ impl Document {
             let mut out = vec![0u8; src.len()];
             for y in 0..h {
                 for x in 0..w {
-                    let (sx, sy) = if horizontal { (w - 1 - x, y) } else { (x, h - 1 - y) };
+                    let (sx, sy) = if horizontal {
+                        (w - 1 - x, y)
+                    } else {
+                        (x, h - 1 - y)
+                    };
                     let s = (sy * w + sx) * 4;
                     let d = (y * w + x) * 4;
                     out[d..d + 4].copy_from_slice(&src[s..s + 4]);
@@ -840,7 +875,12 @@ mod tests {
         d.layers[top].meta.blend = mode;
         d.touch();
         d.recompose();
-        [d.composite[0], d.composite[1], d.composite[2], d.composite[3]]
+        [
+            d.composite[0],
+            d.composite[1],
+            d.composite[2],
+            d.composite[3],
+        ]
     }
 
     #[test]
@@ -870,8 +910,14 @@ mod tests {
         assert!(burn[0] < 10, "затемнение затемнило: {:?}", burn);
         // Чёрная подложка при осветлении остаётся чёрной, белая при затемнении
         // остаётся белой — крайние случаи не дают деления на ноль.
-        assert_eq!(blend_result(BlendMode::ColorDodge, [200, 0, 0, 255], [0, 0, 0, 255])[0], 0);
-        assert_eq!(blend_result(BlendMode::ColorBurn, [10, 0, 0, 255], [255, 0, 0, 255])[0], 255);
+        assert_eq!(
+            blend_result(BlendMode::ColorDodge, [200, 0, 0, 255], [0, 0, 0, 255])[0],
+            0
+        );
+        assert_eq!(
+            blend_result(BlendMode::ColorBurn, [10, 0, 0, 255], [255, 0, 0, 255])[0],
+            255
+        );
     }
 
     #[test]
@@ -957,13 +1003,20 @@ mod tests {
         assert!(d.content_bounds().is_none(), "видимых пикселей нет");
         d.layers[top].meta.visible = true;
         d.layers[top].set(20, 1, 1, [0, 0, 255, 255]);
-        assert_eq!(d.content_bounds().unwrap(), (1, 1, 1, 1), "вернулись один пиксель");
+        assert_eq!(
+            d.content_bounds().unwrap(),
+            (1, 1, 1, 1),
+            "вернулись один пиксель"
+        );
     }
 
     #[test]
     fn content_bounds_is_empty_for_blank_document() {
         let d = Document::new(10, 10);
-        assert!(d.content_bounds().is_none(), "пустой документ без содержимого");
+        assert!(
+            d.content_bounds().is_none(),
+            "пустой документ без содержимого"
+        );
     }
 
     #[test]
@@ -972,9 +1025,17 @@ mod tests {
         d.layers[0].pixels.fill(0);
         d.layers[0].set(4, 0, 0, [10, 0, 0, 255]);
         d.flip_layer(0, true);
-        assert_eq!(d.layers[0].get(4, 3, 0), [10, 0, 0, 255], "пиксель переехал вправо");
+        assert_eq!(
+            d.layers[0].get(4, 3, 0),
+            [10, 0, 0, 255],
+            "пиксель переехал вправо"
+        );
         d.flip_layer(0, true);
-        assert_eq!(d.layers[0].get(4, 0, 0), [10, 0, 0, 255], "двойное отражение вернуло на место");
+        assert_eq!(
+            d.layers[0].get(4, 0, 0),
+            [10, 0, 0, 255],
+            "двойное отражение вернуло на место"
+        );
     }
 
     #[test]
@@ -985,7 +1046,14 @@ mod tests {
             let before = d.layers[0].pixels.clone();
             d.layers[0].set(4, i as usize, 0, [i * 40, 0, 0, 255]);
             let after = d.layers[0].pixels.clone();
-            h.push("мазок", Action::Pixels { layer: 0, before, after });
+            h.push(
+                "мазок",
+                Action::Pixels {
+                    layer: 0,
+                    before,
+                    after,
+                },
+            );
         }
         assert_eq!(h.position(), 3);
         // откатываемся в начало
@@ -1006,7 +1074,14 @@ mod tests {
         let d = doc_white(2, 2);
         let mut h = History::new(2);
         let before = d.layers[0].pixels.clone();
-        h.push("Мазок", Action::Pixels { layer: 0, before: before.clone(), after: before });
+        h.push(
+            "Мазок",
+            Action::Pixels {
+                layer: 0,
+                before: before.clone(),
+                after: before,
+            },
+        );
         h.push("Слой", Action::LayerAdd { index: 1 });
         h.push("Слой", Action::LayerAdd { index: 2 });
         assert_eq!(h.steps.len(), 2, "лимит истории");
@@ -1029,8 +1104,16 @@ mod tests {
         // оказывается в правом верхнем углу: (1, 0)
         assert_eq!(d.layers[0].get(2, 1, 0), [255, 0, 0, 255]);
         d.rotate(3);
-        assert_eq!((d.width, d.height), (4, 2), "обратный поворот вернул размер");
-        assert_eq!(d.layers[0].get(4, 0, 0), [255, 0, 0, 255], "четыре поворота — исходный пиксель");
+        assert_eq!(
+            (d.width, d.height),
+            (4, 2),
+            "обратный поворот вернул размер"
+        );
+        assert_eq!(
+            d.layers[0].get(4, 0, 0),
+            [255, 0, 0, 255],
+            "четыре поворота — исходный пиксель"
+        );
     }
 
     #[test]
@@ -1041,7 +1124,10 @@ mod tests {
         for _ in 0..4 {
             d.rotate(1);
         }
-        assert_eq!(d.layers[0].pixels, before, "четыре поворота не меняют картинку");
+        assert_eq!(
+            d.layers[0].pixels, before,
+            "четыре поворота не меняют картинку"
+        );
         assert_eq!((d.width, d.height), (3, 5));
     }
 
