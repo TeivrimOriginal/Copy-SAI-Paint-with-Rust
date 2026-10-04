@@ -768,7 +768,7 @@ fn extra_bytes(name: &str, section: Option<u32>, mask: Vec<u8>) -> Vec<u8> {
     let mut nm: Vec<u8> = Vec::with_capacity(name.len() + 1);
     nm.push(name.len().min(255) as u8);
     nm.extend_from_slice(&name.as_bytes()[..name.len().min(255)]);
-    while nm.len() % 4 != 0 {
+    while !nm.len().is_multiple_of(4) {
         nm.push(0);
     }
     out.extend_from_slice(&nm);
