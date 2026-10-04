@@ -334,10 +334,8 @@ fn main() {
                 }
                 // Символы приходят отдельным событием — так работает и кириллица.
                 WindowEvent::Char(c) => {
-                    if !ctrl_held && !alt {
-                        if c != '\r' && c != '\n' {
-                            ui.keys.push(KeyEv::Char(c));
-                        }
+                    if !ctrl_held && !alt && c != '\r' && c != '\n' {
+                        ui.keys.push(KeyEv::Char(c));
                     }
                 }
                 _ => {}
@@ -467,9 +465,9 @@ fn main() {
             }
             // Выделение: рамка тянется сама по кнопке, а плавающий фрагмент
             // следует за курсором даже без зажатой кнопки.
-            if inside && (drawing_left || drawing_right) {
-                app.move_select(cp);
-            } else if app.floating.is_some() && app.sel_drag == tpaint::app::SelDrag::None {
+            if (inside && (drawing_left || drawing_right))
+                || (app.floating.is_some() && app.sel_drag == tpaint::app::SelDrag::None)
+            {
                 app.move_select(cp);
             }
             if (released_l && drawing_left)

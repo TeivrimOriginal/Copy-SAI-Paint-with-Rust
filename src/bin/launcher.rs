@@ -52,7 +52,7 @@ fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
     // Если лаунчеру дали файл — сразу запускаем редактор с ним.
     if let Some(first) = args.first().filter(|a| !a.starts_with("--")) {
-        let _ = start_editor(&[first.clone()]);
+        let _ = start_editor(std::slice::from_ref(first));
         return;
     }
 
@@ -123,30 +123,28 @@ fn main() {
                 }
                 WindowEvent::Close => return,
                 WindowEvent::MouseButton(MouseButtonLeft, glfw::Action::Press, _) => window.focus(),
-                WindowEvent::Key(key, _, action, _) => {
-                    if action == glfw::Action::Press {
-                        match key {
-                            Key::Escape => {
-                                // Esc закрывает окно файлов, иначе — сам лаунчер.
-                                if st.dialog.is_some() {
-                                    st.dialog = None;
-                                    ui.focus = None;
-                                } else {
-                                    return;
-                                }
+                WindowEvent::Key(key, _, glfw::Action::Press, _) => {
+                    match key {
+                        Key::Escape => {
+                            // Esc закрывает окно файлов, иначе — сам лаунчер.
+                            if st.dialog.is_some() {
+                                st.dialog = None;
+                                ui.focus = None;
+                            } else {
+                                return;
                             }
-                            Key::Enter => {
-                                if st.dialog.is_some() {
-                                    take_dialog_result(&mut st);
-                                } else {
-                                    new_document(&mut st);
-                                }
+                        }
+                        Key::Enter => {
+                            if st.dialog.is_some() {
+                                take_dialog_result(&mut st);
+                            } else {
+                                new_document(&mut st);
                             }
-                            _ => {
-                                if st.dialog.is_none() {
-                                    if let Some(c) = char_of(key) {
-                                        ui.keys.push(KeyEv::Char(c));
-                                    }
+                        }
+                        _ => {
+                            if st.dialog.is_none() {
+                                if let Some(c) = char_of(key) {
+                                    ui.keys.push(KeyEv::Char(c));
                                 }
                             }
                         }
