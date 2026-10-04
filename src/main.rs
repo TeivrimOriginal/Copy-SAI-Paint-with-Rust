@@ -333,10 +333,8 @@ fn main() {
                     }
                 }
                 // Символы приходят отдельным событием — так работает и кириллица.
-                WindowEvent::Char(c) => {
-                    if !ctrl_held && !alt && c != '\r' && c != '\n' {
-                        ui.keys.push(KeyEv::Char(c));
-                    }
+                WindowEvent::Char(c) if !ctrl_held && !alt && c != '\r' && c != '\n' => {
+                    ui.keys.push(KeyEv::Char(c));
                 }
                 _ => {}
             }
