@@ -123,9 +123,6 @@ pub fn blit_rect(layer: &mut Layer, w: usize, h: usize, data: &RectData, x: f32,
     }
 }
 
-/// Отпечаток кисти: круг с мягким краем. hardness = 1 — резкий край, 0 — очень мягкий.
-/// Форма отпечатка кисти: круг, эллипс или квадрат.
-
 /// Маска эллипса, вписанного в прямоугольник. Край мягкий в один пиксель,
 /// чтобы граница выделения не выглядела ступенькой.
 pub fn ellipse_mask(w: usize, h: usize, r: SelRect) -> Vec<u8> {
@@ -134,8 +131,8 @@ pub fn ellipse_mask(w: usize, h: usize, r: SelRect) -> Vec<u8> {
     let y0 = r.y.max(0.0).floor() as i64;
     let x1 = ((r.x + r.w).ceil() as i64).min(w as i64);
     let y1 = ((r.y + r.h).ceil() as i64).min(h as i64);
-    let cx = (r.x + r.w * 0.5) as f32;
-    let cy = (r.y + r.h * 0.5) as f32;
+    let cx = r.x + r.w * 0.5;
+    let cy = r.y + r.h * 0.5;
     let rx = (r.w * 0.5).abs().max(0.5);
     let ry = (r.h * 0.5).abs().max(0.5);
     for y in y0..y1 {
@@ -204,10 +201,10 @@ fn span_add(dst: &mut [u16], x0: f32, x1: f32, one: f32) {
     }
     let ia = a.floor() as usize;
     let ib = (b.ceil() as usize).min(dst.len());
-    for x in ia..ib {
+    for (x, d) in dst.iter_mut().enumerate().take(ib).skip(ia) {
         let cov = (b - x as f32).min(1.0) - (a - x as f32).max(0.0);
         if cov > 0.0 {
-            dst[x] += (cov * one) as u16;
+            *d += (cov * one) as u16;
         }
     }
 }
@@ -215,6 +212,7 @@ fn span_add(dst: &mut [u16], x0: f32, x1: f32, one: f32) {
 /// «Волшебная палочка»: заливает маску пикселями слоя, близкими по цвету
 /// к образцу. `contiguous` — только соприкасающиеся области, иначе все
 /// подходящие по всей ширине допуска.
+#[allow(clippy::too_many_arguments)]
 pub fn wand(
     layer: &Layer,
     mask: &mut [u8],
@@ -229,7 +227,7 @@ pub fn wand(
         return;
     }
     let target = layer.get(w, sx as usize, sy as usize);
-    let tol = tolerance.clamp(0, 255) as i32;
+    let tol = tolerance.clamp(0, 255);
     let near = |px: [u8; 4]| -> bool {
         // Прозрачные пиксели не притягивают к себе схожие: иначе палочка
         // выделила бы весь пустой фон вокруг картинки.
@@ -335,8 +333,8 @@ pub fn mask_blur(mask: &mut [u8], w: usize, h: usize, px: f32) {
                     n += 1;
                 }
             }
-            if n > 0 {
-                mask[y * w + x] = (sum / n) as u8;
+            if let Some(avg) = sum.checked_div(n) {
+                mask[y * w + x] = avg as u8;
             }
         }
     }
@@ -344,6 +342,7 @@ pub fn mask_blur(mask: &mut [u8], w: usize, h: usize, px: f32) {
 
 /// Тень слоя: размытая альфа, сдвинутая и покрашенная. Возвращает готовый
 /// буфер RGBA, который накладывается под слой.
+#[allow(clippy::too_many_arguments)]
 pub fn layer_shadow(
     w: usize,
     h: usize,
@@ -656,7 +655,7 @@ pub fn stamp_curve<F: FnMut(f32, f32)>(
 ) {
     let step = step.max(0.35);
     let chord = ((p2.0 - p1.0).powi(2) + (p2.1 - p1.1).powi(2)).sqrt();
-    let n = ((chord / step).ceil() as usize + 1).min(512).max(2);
+    let n = ((chord / step).ceil() as usize + 1).clamp(2, 512);
     let eval = |t: f32| -> (f32, f32) {
         let t2 = t * t;
         let t3 = t2 * t;
@@ -728,7 +727,8 @@ fn shape_dist(shape: Shape, dx: f32, dy: f32) -> f32 {
     }
 }
 
-/// Отпечаток кисти заданной формы.
+/// Отпечаток кисти заданной формы: круг, эллипс или квадрат, с мягким краем.
+/// hardness = 1 — резкий край, 0 — очень мягкий.
 #[allow(clippy::too_many_arguments)]
 pub fn stamp_shape(
     layer: &mut Layer,
@@ -933,6 +933,7 @@ fn cw_i(v: f32) -> i32 {
     v.round() as i32
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn stamp(
     layer: &mut Layer,
     w: usize,
@@ -1015,7 +1016,7 @@ pub fn brush_line_shape(
     let dy = y1 - y0;
     let dist = (dx * dx + dy * dy).sqrt();
     let step = (radius * 0.25).max(0.35);
-    let n = (dist / step).ceil().max(1.0).min(4000.0);
+    let n = (dist / step).ceil().clamp(1.0, 4000.0);
     for i in 0..=n as i32 {
         let t = i as f32 / n;
         stamp_shape(
@@ -1181,7 +1182,9 @@ pub fn ellipse(
     // Контур: обходим по углу, густота шага зависит от радиуса кисти.
     let perimeter =
         std::f32::consts::PI * (3.0 * (a + b) - ((a * b * 3.0).sqrt() + (2.0 * a * b).sqrt()));
-    let steps = ((perimeter / ((radius * 0.25).max(0.35))).ceil().max(32.0)).min(8000.0);
+    let steps = (perimeter / (radius * 0.25).max(0.35))
+        .ceil()
+        .clamp(32.0, 8000.0);
     let mut px = cx + a;
     let mut py = cy;
     for i in 0..=steps as i32 {
@@ -1730,7 +1733,8 @@ pub fn adjust(layer: &mut Layer, brightness: f32, contrast: f32, saturation: f32
     let b = brightness.clamp(-1.0, 1.0) * 255.0;
     let s = saturation.clamp(-1.0, 1.0);
     let hshift = hue.clamp(-1.0, 1.0) * 180.0;
-    for p in layer.pixels.chunks_exact_mut(4) {
+    let (pixels, _) = layer.pixels.as_chunks_mut::<4>();
+    for p in pixels.iter_mut() {
         if p[3] == 0 {
             continue;
         }
@@ -1819,8 +1823,8 @@ pub fn mask_stamp_shape(
     };
     let x0 = (cx - ax).floor().max(0.0) as usize;
     let y0 = (cy - r).floor().max(0.0) as usize;
-    let x1 = ((cx + ax).ceil() as i64 + 1).min(w as i64).max(0) as usize;
-    let y1 = ((cy + r).ceil() as i64 + 1).min(h as i64).max(0) as usize;
+    let x1 = ((cx + ax).ceil() as i64 + 1).clamp(0, w as i64) as usize;
+    let y1 = ((cy + r).ceil() as i64 + 1).clamp(0, h as i64) as usize;
     let op = opacity.clamp(0.0, 1.0);
     let hard = hardness.clamp(0.0, 1.0);
     for y in y0..y1 {
@@ -1972,6 +1976,7 @@ pub fn blit_transformed(
 
 /// Заливка области. tolerance — допуск по цвету, contiguous — только
 /// соприкасающиеся области (false — заменить все совпадающие пиксели).
+#[allow(clippy::too_many_arguments)]
 pub fn flood_fill(
     layer: &mut Layer,
     w: usize,
@@ -2490,11 +2495,11 @@ mod tests {
         let (w, h) = (16, 8);
         let mut l = empty(w, h);
         l.set(w, 8, 4, [255, 255, 255, 255]);
-        let flat_before = l.get(w, 7, 4).clone();
+        let flat_before = l.get(w, 7, 4);
         sharpen(&mut l, w, h, 1.0);
         let after = l.get(w, 7, 4);
         assert!(
-            after[0] > flat_before[0].max(0) || after[0] == 0,
+            after[0] > flat_before[0] || after[0] == 0,
             "рядом с точкой стало контрастнее: {:?} -> {:?}",
             flat_before,
             after

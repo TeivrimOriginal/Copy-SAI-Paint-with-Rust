@@ -325,8 +325,8 @@ impl FileDialog {
                     files.push((name, false));
                 }
             }
-            dirs.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
-            files.sort_by(|a, b| b.0.to_lowercase().cmp(&a.0.to_lowercase()));
+            dirs.sort_by_key(|a| a.0.to_lowercase());
+            files.sort_by_key(|a| std::cmp::Reverse(a.0.to_lowercase()));
             self.entries.extend(dirs);
             self.entries.extend(files);
         }
@@ -714,6 +714,14 @@ pub struct App {
     pub f_hue: f32,
     pub f_blur: f32,
     pub f_sharpen: f32,
+}
+
+/// clippy требует `Default` рядом с `new()` без аргументов, а конструктор
+/// собирает документ, который нельзя выразить через derive.
+impl Default for App {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl App {
@@ -2138,10 +2146,7 @@ impl App {
 
     /// Раскрыта ли папка, чьей шапкой является слой.
     pub fn group_open(&self, index: usize) -> bool {
-        self.doc
-            .layers
-            .get(index)
-            .map_or(true, |l| l.meta.group_open)
+        self.doc.layers.get(index).is_none_or(|l| l.meta.group_open)
     }
 
     /// Раскрытие/сворачивание папки по её шапке.
@@ -2166,7 +2171,7 @@ impl App {
             .layers
             .get(index + 1)
             .and_then(|l| l.meta.group.as_deref())
-            .map_or(true, |next| next != name)
+            .is_none_or(|next| next != name)
     }
 
     /// Слои папки: шапка и всё её содержимое (сверху вниз по индексу).
@@ -3097,10 +3102,10 @@ impl App {
         }
         // Рамка переезжает вместе с содержимым.
         let c = t.center();
-        let w2 =
-            (((t.pts[1].0 - t.pts[0].0).powi(2) + (t.pts[1].1 - t.pts[0].1).powi(2)).sqrt()) as f32;
-        let h2 =
-            (((t.pts[3].0 - t.pts[0].0).powi(2) + (t.pts[3].1 - t.pts[0].1).powi(2)).sqrt()) as f32;
+        let w2 = (t.pts[1].0 - t.pts[0].0).powi(2) + (t.pts[1].1 - t.pts[0].1).powi(2);
+        let h2 = (t.pts[3].0 - t.pts[0].0).powi(2) + (t.pts[3].1 - t.pts[0].1).powi(2);
+        let w2 = w2.sqrt();
+        let h2 = h2.sqrt();
         self.selection = Some(SelRect {
             x: c.0 - w2 / 2.0,
             y: c.1 - h2 / 2.0,
@@ -4875,7 +4880,7 @@ mod tests {
         let dark = app.doc.active_layer().get(20, 2, 2)[0];
         assert!(dark < before[2 * 4], "предпросмотр сразу виден в слое");
         // История пока чистая: предпросмотр не должен попадать в неё.
-        assert!(app.history.can_undo() == false, "правка ещё не в истории");
+        assert!(!app.history.can_undo(), "правка ещё не в истории");
         app.close_curves(true);
         assert_eq!(app.doc.layers[0].pixels, app.doc.layers[0].pixels);
         assert!(app.history.can_undo(), "один шаг в истории");
@@ -5950,9 +5955,7 @@ mod tests {
         let mut app = app_with_blank(4, 4);
         let path = temp_file("по_пути.psd");
         let mut px = vec![0u8; 3 * 3 * 4];
-        for i in 0..px.len() {
-            px[i] = 255;
-        }
+        px.fill(255);
         std::fs::write(&path, crate::psd::write(3, 3, &px)).expect("записали");
         app.open_project(&path)
             .expect("путь с .psd открывается как PSD");

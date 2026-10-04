@@ -88,6 +88,7 @@ impl Fonts {
     ///
     /// (x, y) — начало пера, y — **базовая линия**: так же, как в `Ui::text`,
     /// поэтому предпросмотр на экране и результат в слое совпадают.
+    #[allow(clippy::too_many_arguments)]
     pub fn draw_to_layer(
         &self,
         layer: &mut crate::doc::Layer,
@@ -167,6 +168,7 @@ impl Fonts {
 
     /// Растеризует строку вертикально: глифы идут сверху вниз, каждый
     /// выровнен по центру колонки. Точка (x, y) — верх колонки.
+    #[allow(clippy::too_many_arguments)]
     pub fn draw_vertical_to_layer(
         &self,
         layer: &mut crate::doc::Layer,
@@ -407,6 +409,7 @@ impl Fonts {
 /// (x, y) — левый верхний угол строки (как при клике мышью), базовая линия
 /// вычисляется по высоте букв. Шрифт подгружается заново: текст на холсте
 /// рисуется редко, а держать вторую копию шрифта в состоянии незачем.
+#[allow(clippy::too_many_arguments)]
 pub fn draw_text(
     layer: &mut crate::doc::Layer,
     w: usize,
@@ -443,6 +446,7 @@ pub fn draw_text(
 
 /// Растеризует строку вертикально: буквы идут столбиком сверху вниз,
 /// (x, y) — центр верхней буквы.
+#[allow(clippy::too_many_arguments)]
 pub fn draw_text_vertical(
     layer: &mut crate::doc::Layer,
     w: usize,
@@ -487,7 +491,7 @@ fn load_font(names: &[&str]) -> Option<FontVec> {
         tried.push(std::path::PathBuf::from("fonts").join(n));
         tried.push(std::path::PathBuf::from("C:\\Windows\\Fonts").join(n));
         for p in tried {
-            if let Some(b) = std::fs::read(&p).ok() {
+            if let Ok(b) = std::fs::read(&p) {
                 if let Ok(f) = FontVec::try_from_vec(b) {
                     return Some(f);
                 }

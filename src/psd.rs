@@ -186,7 +186,7 @@ pub fn unpackbits(src: &[u8], want: usize) -> Result<Vec<u8>, String> {
             }
             let v = src[i];
             i += 1;
-            out.extend(std::iter::repeat(v).take(len));
+            out.extend(std::iter::repeat_n(v, len));
         }
     }
     out.truncate(want);
@@ -224,7 +224,7 @@ pub fn read_file(bytes: &[u8]) -> Result<PsdFile, String> {
     if mode != 3 {
         return Err(format!("режим {} не поддерживается (нужен RGB)", mode));
     }
-    if channels < 3 || channels > 4 {
+    if !(3..=4).contains(&channels) {
         return Err(format!(
             "{} каналов не поддерживается (нужно 3 или 4)",
             channels
@@ -482,7 +482,9 @@ fn read_pascal(r: &mut Reader) -> Result<String, String> {
 /// UTF-16BE в строку — так Photoshop хранит настоящее имя слоя.
 fn decode_utf16(b: &[u8]) -> String {
     let units: Vec<u16> = b
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|c| u16::from_be_bytes([c[0], c[1]]))
         .collect();
     String::from_utf16_lossy(&units)
@@ -731,7 +733,7 @@ fn plane_rows(plane: &[u8], w: usize, h: usize) -> Vec<u8> {
 
 /// Есть ли в слое что рисовать: хотя бы один непрозрачный пиксель.
 fn has_content(rgba: &[u8]) -> bool {
-    rgba.chunks_exact(4).any(|p| p[3] != 0)
+    rgba.as_chunks::<4>().0.iter().any(|p| p[3] != 0)
 }
 
 /// Рамка непрозрачного содержимого слоя. Пустой слой получает кадр 1×1:
@@ -897,7 +899,7 @@ mod tests {
                 px[i] = (x * 30) as u8;
                 px[i + 1] = (y * 50) as u8;
                 px[i + 2] = 128;
-                px[i + 3] = if (x + y) % 3 == 0 { 200 } else { 255 };
+                px[i + 3] = if (x + y).is_multiple_of(3) { 200 } else { 255 };
             }
         }
         let file = write(w, h, &px);
@@ -954,7 +956,8 @@ mod tests {
     /// Слой для проверки: сплошной прямоугольник своего цвета.
     fn flat(w: usize, h: usize, c: [u8; 4]) -> Vec<u8> {
         let mut px = vec![0u8; w * h * 4];
-        for p in px.chunks_exact_mut(4) {
+        let (chunks, _) = px.as_chunks_mut::<4>();
+        for p in chunks.iter_mut() {
             p.copy_from_slice(&c);
         }
         px

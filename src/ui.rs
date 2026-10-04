@@ -20,6 +20,10 @@ pub mod theme {
     pub const PANEL: Color = [0.149, 0.149, 0.165, 1.0];
     pub const PANEL_HI: Color = [0.192, 0.192, 0.212, 1.0];
     pub const FIELD: Color = [0.235, 0.235, 0.259, 1.0];
+    // clippy считает 0.318 приближением к 1/π (FRAC_1_PI = 0.3183…) и ругается
+    // на `approx_constant`. Это компонент цвета рамки, а не число: менять его ради
+    // линтера нельзя, поменяется цвет интерфейса.
+    #[allow(clippy::approx_constant)]
     pub const BORDER: Color = [0.286, 0.286, 0.318, 1.0];
     pub const TEXT: Color = [0.902, 0.902, 0.925, 1.0];
     pub const TEXT_DIM: Color = [0.596, 0.596, 0.635, 1.0];

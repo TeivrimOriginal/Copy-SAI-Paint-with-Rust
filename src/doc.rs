@@ -303,7 +303,8 @@ impl Layer {
     }
 
     pub fn fill(&mut self, c: [u8; 4]) {
-        for p in self.pixels.chunks_exact_mut(4) {
+        let (pixels, _) = self.pixels.as_chunks_mut::<4>();
+        for p in pixels.iter_mut() {
             p.copy_from_slice(&c);
         }
     }
@@ -532,7 +533,8 @@ impl Document {
         if self.composite.len() != n * 4 {
             self.composite = vec![0; n * 4];
         }
-        for p in self.composite.chunks_exact_mut(4) {
+        let (composite, _) = self.composite.as_chunks_mut::<4>();
+        for p in composite.iter_mut() {
             p.copy_from_slice(&[0, 0, 0, 0]);
         }
         let out = &mut self.composite;

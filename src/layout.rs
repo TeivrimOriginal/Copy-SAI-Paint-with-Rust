@@ -1057,6 +1057,7 @@ fn fx_dialog(ui: &mut Ui, app: &mut App, w: f32, h: f32) {
 }
 
 /// Числовое поле эффекта: значение пишется в мета слой через `field`.
+#[allow(clippy::too_many_arguments)]
 fn fx_num(
     ui: &mut Ui,
     app: &mut App,
@@ -1400,7 +1401,7 @@ fn draw_symmetry_axes(ui: &mut Ui, app: &App, _cr: Rect) {
         _ => {}
     }
     if app.params.symmetry == Symmetry::Radial {
-        let n = app.params.sym_sides.clamp(2.0, 12.0) as f32;
+        let n = app.params.sym_sides.clamp(2.0, 12.0);
         for k in 0..(n as i32) {
             let a = std::f32::consts::PI * k as f32 / n;
             let p0 = ray(a);
@@ -1427,7 +1428,7 @@ fn draw_guides(ui: &mut Ui, app: &mut App, cr: Rect) {
                 let x = app.canvas_to_screen(*pos, 0.0).0;
                 ((x - ui.mouse.0).abs(), i)
             };
-            if s.0 <= grab_r && best.map_or(true, |b| s.0 < b.0) {
+            if s.0 <= grab_r && best.is_none_or(|b| s.0 < b.0) {
                 best = Some(s);
             }
         }
@@ -2349,7 +2350,7 @@ fn properties(ui: &mut Ui, app: &mut App, r: Rect) {
                 app.notify(&format!("Кисть «{}»", p.name));
             }
         }
-        y += 22.0 * ((PRESETS.len() + cols - 1) / cols) as f32 + 6.0;
+        y += 22.0 * (PRESETS.len() + cols - 1).div_ceil(cols) as f32 + 6.0;
     }
 
     // --- цвет ---
@@ -2558,13 +2559,13 @@ fn layers_panel(ui: &mut Ui, app: &mut App, r: Rect, actions: &mut Vec<Action>) 
     }
 
     // Сверху — верхний слой
-    for row in app.layer_scroll..shown.len().min(app.layer_scroll + vis_rows) {
-        let idx = shown[row];
+    let end = shown.len().min(app.layer_scroll + vis_rows);
+    for (off, &idx) in shown[app.layer_scroll..end].iter().enumerate() {
         let rr = [
             r[0] + 4.0,
-            list_top + (row - app.layer_scroll) as f32 * row_h,
+            list_top + off as f32 * row_h,
             r[2] - 4.0,
-            list_top + (row - app.layer_scroll + 1) as f32 * row_h - 2.0,
+            list_top + (off + 1) as f32 * row_h - 2.0,
         ];
         // Цветная метка слоя — полоска у левого края строки, как в Clip Studio.
         // Клик по ней переключает цвет метки (нет → красная → … → нет).
